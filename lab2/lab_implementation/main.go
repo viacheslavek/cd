@@ -9,10 +9,11 @@ import (
 	"io"
 	"log"
 	"os"
+	"strconv"
 )
 
 // TODO: вернуть к вводу как параметр
-const filename = "/Users/slavaruswarrior/Documents/GitHub/cd/lab2/source_example/example.go"
+const exampleFilename = "/Users/slavaruswarrior/Documents/GitHub/cd/lab2/source_example/example.go"
 
 /*
 Заменить вхождения глобальной константы LINE на номер текущей строки, FILE — на имя текущего файла.
@@ -21,30 +22,30 @@ const filename = "/Users/slavaruswarrior/Documents/GitHub/cd/lab2/source_example
 В новой программе они должны отсутствовать.
 */
 
-func findConstFileAndLineAndModify(file *ast.File) {
+func findConstFileAndLineAndModify(fset *token.FileSet, file *ast.File) {
 	ast.Inspect(file, func(node ast.Node) bool {
 		if genDecl, okDecl := node.(*ast.GenDecl); okDecl && checkConst(genDecl) {
 			log.Println("find const")
-			modifyFileAndLine(genDecl)
+			modifyFileAndLine(fset, genDecl)
 		}
 		return true
 	})
 }
 
-func modifyFileAndLine(gd *ast.GenDecl) {
+func modifyFileAndLine(fset *token.FileSet, gd *ast.GenDecl) {
 	ast.Inspect(gd, func(node ast.Node) bool {
 		if valueSpec, okValueSpec := node.(*ast.ValueSpec); okValueSpec {
 			log.Println("find value")
 			if isFileConst(valueSpec) {
 				log.Println("find file")
-				errFile := modifyFile(valueSpec)
+				errFile := modifyFile(fset, valueSpec)
 				if errFile != nil {
 					log.Fatalf("failed to parse ast: err in modify file: %e", errFile)
 				}
 			}
 			if isLineConst(valueSpec) {
 				log.Println("find line")
-				errLine := modifyLine(valueSpec)
+				errLine := modifyLine(fset, valueSpec)
 				if errLine != nil {
 					log.Fatalf("failed to parse ast: err in modify file: %e", errLine)
 				}
@@ -67,11 +68,12 @@ func isFileConst(vs *ast.ValueSpec) bool {
 	return false
 }
 
-func modifyFile(vs *ast.ValueSpec) error {
-	return modify(vs, modifyValueFile, "FILE")
+func modifyFile(fset *token.FileSet, vs *ast.ValueSpec) error {
+	return modify(fset, vs, modifyValueFile, "FILE")
 }
 
-func modify(vs *ast.ValueSpec, fModifyValue func(value *ast.BasicLit) error, name string) error {
+func modify(fset *token.FileSet, vs *ast.ValueSpec,
+	fModifyValue func(fset *token.FileSet, value *ast.BasicLit) error, name string) error {
 	filePosition, errPosition := findPosition(name, vs.Names, vs.Values)
 	if errPosition != nil {
 		return errPosition
@@ -82,7 +84,7 @@ func modify(vs *ast.ValueSpec, fModifyValue func(value *ast.BasicLit) error, nam
 		return fmt.Errorf("interface type does not match. needed ast.BasicLit")
 	}
 
-	if errValue := fModifyValue(value); errValue != nil {
+	if errValue := fModifyValue(fset, value); errValue != nil {
 		return errValue
 	}
 
@@ -103,11 +105,20 @@ func findPosition(name string, Names []*ast.Ident, spec []ast.Expr) (int, error)
 	return -1, fmt.Errorf("failed to find %s", name)
 }
 
-// TODO: обрабатываю FILE value
-func modifyValueFile(value *ast.BasicLit) error {
+func modifyValueFile(fset *token.FileSet, value *ast.BasicLit) error {
 	log.Println("start modify value file")
-	fmt.Println("value", value)
+
+	if value.Kind.String() != "STRING" {
+		return fmt.Errorf("type does not match: need %s, given: %s", "STRING", value.Kind.String())
+	}
+
+	value.Value = getFilename(fset.Position(value.ValuePos).Filename)
+
 	return nil
+}
+
+func getFilename(filename string) string {
+	return fmt.Sprintf("\"%s\"", filename)
 }
 
 func isLineConst(vs *ast.ValueSpec) bool {
@@ -119,14 +130,18 @@ func isLineConst(vs *ast.ValueSpec) bool {
 	return false
 }
 
-func modifyLine(vs *ast.ValueSpec) error {
-	return modify(vs, modifyValueLine, "LINE")
+func modifyLine(fset *token.FileSet, vs *ast.ValueSpec) error {
+	return modify(fset, vs, modifyValueLine, "LINE")
 }
 
-// TODO: обрабатываю FILE value
-func modifyValueLine(value *ast.BasicLit) error {
+func modifyValueLine(fset *token.FileSet, value *ast.BasicLit) error {
 	log.Println("start modify value line")
-	fmt.Println("value", value)
+
+	if value.Kind.String() != "INT" {
+		return fmt.Errorf("type does not match: need %s, given: %s", "INT", value.Kind.String())
+	}
+
+	value.Value = strconv.Itoa(fset.Position(value.ValuePos).Line)
 
 	return nil
 }
@@ -157,9 +172,9 @@ func main() {
 	}()
 
 	fset := token.NewFileSet()
-	if file, errPF := parser.ParseFile(fset, filename, nil, parser.ParseComments); errPF == nil {
+	if file, errPF := parser.ParseFile(fset, exampleFilename, nil, parser.ParseComments); errPF == nil {
 
-		findConstFileAndLineAndModify(file)
+		findConstFileAndLineAndModify(fset, file)
 
 		if errN := format.Node(io.Writer(newGoFile), fset, file); errN != nil {
 			fmt.Printf("Formatter error: %v\n", errN)
@@ -169,7 +184,7 @@ func main() {
 			log.Fatalf("failed write go file with err %e", errF)
 		}
 	} else {
-		fmt.Printf("Errors in %s\n as %e", filename, errPF)
+		fmt.Printf("Errors in %s\n as %e", exampleFilename, errPF)
 	}
 
 	fmt.Println("finish")
