@@ -10,26 +10,6 @@ import (
 	"os"
 )
 
-func main() {
-	if len(os.Args) != 2 {
-		fmt.Printf("usage: demo <filename.go>\n")
-		return
-	}
-
-	fset := token.NewFileSet()
-	if file, err := parser.ParseFile(fset, os.Args[1], nil, parser.ParseComments); err == nil {
-		insertIntVar(file, "xxx", 666)
-		insertHello(file)
-
-		if format.Node(os.Stdout, fset, file) != nil {
-			fmt.Printf("Formatter error: %v\n", err)
-		}
-		//ast.Fprint(os.Stdout, fset, file, nil)
-	} else {
-		fmt.Printf("Errors in %s\n", os.Args[1])
-	}
-}
-
 func insertIntVar(file *ast.File, name string, value int) {
 	var before, after []ast.Decl
 
@@ -91,4 +71,24 @@ func insertHello(file *ast.File) {
 		}
 		return true
 	})
+}
+
+func main() {
+	if len(os.Args) != 2 {
+		fmt.Printf("usage: demo <filename.go>\n")
+		return
+	}
+
+	fset := token.NewFileSet()
+	if file, err := parser.ParseFile(fset, os.Args[1], nil, parser.ParseComments); err == nil {
+		insertIntVar(file, "xxx", 666)
+		insertHello(file)
+
+		if format.Node(os.Stdout, fset, file) != nil {
+			fmt.Printf("Formatter error: %v\n", err)
+		}
+		//ast.Fprint(os.Stdout, fset, file, nil)
+	} else {
+		fmt.Printf("Errors in %s\n", os.Args[1])
+	}
 }

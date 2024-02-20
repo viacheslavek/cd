@@ -5,6 +5,8 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"io"
+	"log"
 	"os"
 )
 
@@ -13,6 +15,15 @@ func main() {
 		fmt.Printf("usage: astprint <filename.go>\n")
 		return
 	}
+
+	astFile, err := os.Create("ast_output.txt")
+	if err != nil {
+		log.Fatalf("failed create file with err %e", err)
+	}
+
+	defer func() {
+		_ = astFile.Close()
+	}()
 
 	// Создаём хранилище данных об исходных файлах
 	fset := token.NewFileSet()
@@ -25,9 +36,10 @@ func main() {
 		parser.ParseComments, // приказываем сохранять комментарии
 	); err == nil {
 		// Если парсер отработал без ошибок, печатаем дерево
-		ast.Fprint(os.Stdout, fset, file, nil)
+		ast.Fprint(io.Writer(astFile), fset, file, nil)
 	} else {
 		// в противном случае, выводим сообщение об ошибке
 		fmt.Printf("Error: %v", err)
 	}
+
 }
