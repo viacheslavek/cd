@@ -68,7 +68,7 @@ func parseLine(taes *[]TokenAndError, scanner *bufio.Scanner, line string, curre
 	// Компилируем регулярные выражения один раз
 	reAloneZero := regexp.MustCompile(`(?:^|[^0])0(?:$|[^0\S])`)
 
-	reSequenceUnits := regexp.MustCompile(`1+`)
+	reSequenceUnits := regexp.MustCompile(`1+(?:$|[^1\S])`)
 
 	reRegularStrings := regexp.MustCompile(`"(\\.|[^"\\])*"`)
 

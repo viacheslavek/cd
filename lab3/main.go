@@ -5,7 +5,7 @@ import (
 	"github.com/VyacheslavIsWorkingNow/cd/lab3/lab_lexer"
 )
 
-const filepath = "test_files/str_literal_error.txt"
+const filepath = "test_files/number_error.txt"
 
 func main() {
 
