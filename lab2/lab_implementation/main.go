@@ -146,6 +146,56 @@ func modifyValueLine(fset *token.FileSet, value *ast.BasicLit) error {
 	return nil
 }
 
+func findVarAndModify(fset *token.FileSet, file *ast.File) {
+	ast.Inspect(file, func(node ast.Node) bool {
+		if assignStmt, okAssignStmt := node.(*ast.AssignStmt); okAssignStmt {
+			log.Println("find *ast.AssignStmt")
+			replaceResultInArr(fset, assignStmt)
+		}
+		return true
+	})
+}
+
+func replaceResultInArr(fset *token.FileSet, as *ast.AssignStmt) {
+	for i, rhsI := range as.Rhs {
+		if rhs, okRhs := rhsI.(*ast.Ident); okRhs {
+			if rhs.Name == "LINE" {
+				rhs.Name = strconv.Itoa(fset.Position(rhs.Pos()).Line)
+				as.Rhs[i] = rhs
+			}
+			if rhs.Name == "FILE" {
+				rhs.Name = getFilename(fset.Position(rhs.Pos()).Filename)
+				as.Rhs[i] = rhs
+			}
+		}
+	}
+}
+
+func findVarInFunc(fset *token.FileSet, file *ast.File) {
+	ast.Inspect(file, func(node ast.Node) bool {
+		if callExpr, okCallExpr := node.(*ast.CallExpr); okCallExpr {
+			log.Println("find *CallExpr")
+			forArgsInFunc(fset, callExpr)
+		}
+		return true
+	})
+}
+
+func forArgsInFunc(fset *token.FileSet, ce *ast.CallExpr) {
+	for i, a := range ce.Args {
+		if ident, okIdent := a.(*ast.Ident); okIdent {
+			if ident.Name == "FILE" {
+				ident.Name = getFilename(fset.Position(ident.Pos()).Filename)
+				ce.Args[i] = ident
+			}
+			if ident.Name == "LINE" {
+				ident.Name = strconv.Itoa(fset.Position(ident.Pos()).Line)
+				ce.Args[i] = ident
+			}
+		}
+	}
+}
+
 func main() {
 
 	//if len(os.Args) != 2 {
@@ -175,6 +225,10 @@ func main() {
 	if file, errPF := parser.ParseFile(fset, exampleFilename, nil, parser.ParseComments); errPF == nil {
 
 		findConstFileAndLineAndModify(fset, file)
+
+		findVarAndModify(fset, file)
+
+		findVarInFunc(fset, file)
 
 		if errN := format.Node(io.Writer(newGoFile), fset, file); errN != nil {
 			fmt.Printf("Formatter error: %v\n", errN)

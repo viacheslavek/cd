@@ -1,0 +1,6 @@
+"abcd" "abcd abcd"
+"abcd\nabcd" "abcd\tabcd" "abcd\"abcd"
+"abcd \nabcd" "abcd \tabcd" "abcd \"abcd"
+"abcd \n abcd" "abcd \t abcd" "abcd \" abcd"
+"   abcd   " "   abcd  abcd   "
+"abcd"
