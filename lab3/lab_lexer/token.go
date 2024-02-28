@@ -55,7 +55,7 @@ func (e SyntaxError) IsToken() bool { return false }
 func (e SyntaxError) IsError() bool { return true }
 
 func (e SyntaxError) String() string {
-	return fmt.Sprintf("syntax error (%d, %d): %s", e.Position.Line, e.Position.Column, e.Message)
+	return fmt.Sprintf("syntax error (%d, %d)%s", e.Position.Line, e.Position.Column, e.Message)
 }
 
 func (e SyntaxError) CurrentType() string {

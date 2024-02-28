@@ -1,0 +1,6 @@
+0 111 1 "aaa"
+00 "aa\t\n\"l"
+1 "cccc 1
+@"aaaaa
+aaaa ""  bbbb
+ccccc" "ddd" 1 1111

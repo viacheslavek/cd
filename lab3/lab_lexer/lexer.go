@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -65,20 +66,15 @@ func parseLine(taes *[]TokenAndError, scanner *bufio.Scanner, line string, curre
 	trimGapStep := 0
 
 	// Компилируем регулярные выражения один раз
-	patternAloneZero := "0"
-	reAloneZero := regexp.MustCompile(patternAloneZero)
+	reAloneZero := regexp.MustCompile(`(?:^|[^0])0(?:$|[^0\S])`)
 
-	patternSequenceUnits := "1+"
-	reSequenceUnits := regexp.MustCompile(patternSequenceUnits)
+	reSequenceUnits := regexp.MustCompile(`1+`)
 
-	patternRegularStrings := `"(\\.|[^"\\])*"`
-	reRegularStrings := regexp.MustCompile(patternRegularStrings)
+	reRegularStrings := regexp.MustCompile(`"(\\.|[^"\\])*"`)
 
-	patternLiteralStringsWithCloseQuotes := `@"([^"]*("")?)*"(\s|$)*`
-	reLiteralStringsWithCloseQuotes := regexp.MustCompile(patternLiteralStringsWithCloseQuotes)
+	reLiteralStringsWithCloseQuotes := regexp.MustCompile(`@"([^"]*("")?)*"`)
 
-	patternLiteralStringsWithoutCloseQuotes := `@"([^"]*("")?)*`
-	reLiteralStringsWithoutCloseQuotes := regexp.MustCompile(patternLiteralStringsWithoutCloseQuotes)
+	reLiteralStringsWithoutCloseQuotes := regexp.MustCompile(`@"([^"]*("")?)*`)
 
 	for len(line) > 0 {
 		trimGapStep, line = trimLeadingGapChars(line)
@@ -108,8 +104,9 @@ func parseLine(taes *[]TokenAndError, scanner *bufio.Scanner, line string, curre
 			tore = processLiteralStrInManyLine(scanner, &line, currentLine, &currentColumn)
 
 		} else {
-			// TODO: работаю с ошибками
-			fmt.Println("error")
+			tore = processSyntaxError(&line, currentLine, &currentColumn,
+				reAloneZero, reSequenceUnits, reRegularStrings,
+				reLiteralStringsWithCloseQuotes, reLiteralStringsWithoutCloseQuotes)
 		}
 		*taes = append(*taes, tore)
 	}
@@ -154,8 +151,9 @@ func processLiteralStrInManyLine(
 		}
 	}
 
-	// TODO: не нашел закрывающую кавычку до конца - вернуть ошибку
-	return nil
+	// буквальная строка так и не закончилась
+	*line = ""
+	return NewError(": literal string not end", prevLine, prevColumn)
 }
 
 func findOddNumberDoubleQuotes(line string, index *int) (ok bool) {
@@ -177,4 +175,41 @@ func findOddNumberDoubleQuotes(line string, index *int) (ok bool) {
 	}
 
 	return false
+}
+
+func processSyntaxError(
+	line *string, currentLine, currentColumn *int,
+	zero, one, regular, literal, literalFull *regexp.Regexp) TokenAndError {
+
+	tore := NewError("", *currentLine, *currentColumn)
+
+	// Нахожу минимум между ними
+	zeroIndex := zero.FindStringIndex(*line)
+
+	oneIndex := one.FindStringIndex(*line)
+	regularStrIndex := regular.FindStringIndex(*line)
+	literalStrIndex := literal.FindStringIndex(*line)
+	literalStrFullIndex := literalFull.FindStringIndex(*line)
+
+	numsPred := [][]int{zeroIndex, oneIndex, regularStrIndex, literalStrIndex, literalStrFullIndex}
+
+	nums := make([]int, 0)
+
+	for _, n := range numsPred {
+		if len(n) != 0 {
+			nums = append(nums, n[0])
+		}
+	}
+
+	sort.Ints(nums)
+	if len(nums) == 0 {
+		// в строке не осталось литералов
+		*line = ""
+	} else {
+		// обрезаем до первого возможно валидного литерала
+		*line = (*line)[nums[0]:]
+		*currentColumn += nums[0]
+	}
+
+	return tore
 }
