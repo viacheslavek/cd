@@ -44,7 +44,7 @@ func ParseFile(filepath string) []TokenAndError {
 	}()
 
 	tae := make([]TokenAndError, 0)
-	currentLine := 0
+	currentLine := 1
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -62,7 +62,7 @@ func ParseFile(filepath string) []TokenAndError {
 }
 
 func parseLine(taes *[]TokenAndError, scanner *bufio.Scanner, line string, currentLine *int) {
-	currentColumn := 0
+	currentColumn := 1
 	trimGapStep := 0
 
 	// Компилируем регулярные выражения один раз
