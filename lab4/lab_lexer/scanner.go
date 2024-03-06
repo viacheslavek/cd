@@ -2,7 +2,6 @@ package lab_lexer
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"os"
 )
@@ -22,15 +21,28 @@ func NewScanner(filepath string) *Scanner {
 }
 
 func (s *Scanner) NextToken() IToken {
-	// TODO: тут встраиваю все для компилятора
-	if s.position < len(s.tokens) {
-		token := s.tokens[s.position]
-		s.position++
-		return token
-	}
-	// TODO: возвращаю специальный токен EOF
-	return Token{}
 
+	token := s.tokens[s.position]
+	if token.GetType() != EopTag {
+		s.position++
+	}
+	if token.GetType() == IdentTag {
+		idPos := s.compiler.AddIdentifier(token.(IdentToken))
+		newToken := token.(IdentToken)
+		newToken.SetAttr(idPos)
+		return newToken
+	}
+	if token.GetType() == StrTag {
+		newToken := token.(StringToken)
+		newToken.SetText(newToken.Value[1 : len(newToken.Value)-1])
+		return newToken
+	}
+	if token.GetType() == ErrTag {
+		newToken := token.(ErrorToken)
+		s.compiler.AddMessage(newToken)
+	}
+
+	return token
 }
 
 func (s *Scanner) GetCompiler() *Compiler {
@@ -61,15 +73,13 @@ func ParseFile(filepath string) []IToken {
 			runeScanner.NextRune()
 			tokens = append(tokens, processString(runeScanner))
 		default:
-			if runeScanner.IsLetter() {
+			if runeScanner.IsLetter() && runeScanner.IsLatinLetter() {
 				tokens = append(tokens, processIdentifier(runeScanner))
 			} else {
 				if runeScanner.GetRune() == -1 {
 					tokens = append(tokens, NewEOP())
 				} else {
-					fmt.Println("это не планировалось")
 					tokens = append(tokens, processStartError(runeScanner))
-					return tokens
 				}
 			}
 		}
@@ -138,7 +148,7 @@ func processString(rs *RunePosition) IToken {
 	curPosition := rs.GetCurrentPosition()
 	curPosition.column--
 	return NewString(string(currentString),
-		NewFragment(start, curPosition), string(currentString))
+		NewFragment(start, curPosition))
 }
 
 func processIdentifier(rs *RunePosition) IToken {
@@ -150,7 +160,7 @@ func processIdentifier(rs *RunePosition) IToken {
 		if rs.GetRune() == -1 {
 			return Token{}
 		}
-		if rs.IsLetter() || rs.IsDigit() {
+		if (rs.IsLetter() && rs.IsLatinLetter()) || rs.IsDigit() {
 			// Строим слово
 			currentIdent = append(currentIdent, rs.GetRune())
 		} else {
@@ -160,17 +170,27 @@ func processIdentifier(rs *RunePosition) IToken {
 			}
 			curPosition := rs.GetCurrentPosition()
 			curPosition.column--
-			return NewError("symbol is not a letter or digit", NewFragment(start, curPosition))
+			return NewError("symbol is not a latin letter or digit", NewFragment(start, curPosition))
 		}
 		rs.NextRune()
 	}
 	curPosition := rs.GetCurrentPosition()
 	curPosition.column--
-	return NewIdent(string(currentIdent), NewFragment(start, curPosition), string(currentIdent))
+	return NewIdent(string(currentIdent), NewFragment(start, curPosition))
 }
 
-// TODO: делаю обработку стартовой ошибки - если не с буквы и не с кавычки началось
 func processStartError(rs *RunePosition) IToken {
-	fmt.Println("Разбираем ошибку, что у меня нет таких токенов, с которых могло бы начинаться")
-	return Token{}
+
+	startPosition := rs.GetCurrentPosition()
+	for !rs.IsWhiteSpace() {
+		if rs.GetRune() == -1 {
+			return Token{}
+		}
+		rs.NextRune()
+	}
+
+	curPosition := rs.GetCurrentPosition()
+	curPosition.column--
+
+	return NewError("start is not a quote or letter", NewFragment(startPosition, curPosition))
 }

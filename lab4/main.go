@@ -5,26 +5,23 @@ import (
 	"lab4/lab_lexer"
 )
 
-const filepath = "test_files/strings_error.txt"
+const filepath = "test_files/ident_error.txt"
 
 func main() {
 
-	//scanner := lab_lexer.NewScanner(filepath)
+	scanner := lab_lexer.NewScanner(filepath)
 
-	tokens := lab_lexer.ParseFile(filepath)
-
-	fmt.Println("tokens")
-
-	for i, t := range tokens {
-		fmt.Println("i:", i, "t:", t)
+	token := scanner.NextToken()
+	for token.GetType() != lab_lexer.EopTag {
+		if token.GetType() != lab_lexer.ErrTag {
+			fmt.Println(token)
+		}
+		token = scanner.NextToken()
 	}
 
-	//token := scanner.NextToken()
-	// TODO: сделать итерацию по токенам
-	//for token.IsToken() || token.IsError() && token.CurrentType() != lab_lexer.EOF {
-	//	fmt.Println(token)
-	//	token = lexer.NextToken()
-	//}
+	scanner.GetCompiler().PrintMessages()
+
+	scanner.GetCompiler().PrintIdentifiers()
 
 	fmt.Println("finish")
 }

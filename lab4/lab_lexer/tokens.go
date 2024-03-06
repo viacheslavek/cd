@@ -94,14 +94,21 @@ func NewEOP() EOPToken {
 
 type IdentToken struct {
 	Token
-	attr string
+	attr int
 }
 
-func NewIdent(value string, fragment Fragment, attr string) IdentToken {
+func NewIdent(value string, fragment Fragment) IdentToken {
 	return IdentToken{
 		Token: NewToken(IdentTag, value, fragment),
-		attr:  attr,
 	}
+}
+
+func (it *IdentToken) SetAttr(attr int) {
+	it.attr = attr
+}
+
+func (it IdentToken) String() string {
+	return fmt.Sprintf("%s %s: %d", tagToString[it.Type], it.Coordinate, it.attr)
 }
 
 type StringToken struct {
@@ -109,9 +116,16 @@ type StringToken struct {
 	attr string
 }
 
-func NewString(value string, fragment Fragment, attr string) StringToken {
+func NewString(value string, fragment Fragment) StringToken {
 	return StringToken{
 		Token: NewToken(StrTag, value, fragment),
-		attr:  attr,
 	}
+}
+
+func (st *StringToken) SetText(text string) {
+	st.attr = text
+}
+
+func (st StringToken) String() string {
+	return fmt.Sprintf("%s %s: %s", tagToString[st.Type], st.Coordinate, st.attr)
 }

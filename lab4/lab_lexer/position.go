@@ -61,6 +61,11 @@ func (p *RunePosition) IsLetter() bool {
 	return unicode.IsLetter(p.GetRune())
 }
 
+func (p *RunePosition) IsLatinLetter() bool {
+	r := unicode.ToLower(p.GetRune())
+	return r >= 'a' && r <= 'z'
+}
+
 func (p *RunePosition) IsDigit() bool {
 	return unicode.IsDigit(p.GetRune())
 }
