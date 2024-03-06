@@ -3,7 +3,7 @@ package lab_lexer
 type DomainTag int
 
 const (
-	IdentTag DomainTag = iota
+	IdentTag DomainTag = iota + 1
 	StrTag
 	ErrTag
 	EopTag

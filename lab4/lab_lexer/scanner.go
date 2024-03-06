@@ -8,7 +8,7 @@ import (
 )
 
 type Scanner struct {
-	tokens   []Token
+	tokens   []IToken
 	compiler *Compiler
 	position int
 }
@@ -21,7 +21,7 @@ func NewScanner(filepath string) *Scanner {
 	}
 }
 
-func (s *Scanner) NextToken() Token {
+func (s *Scanner) NextToken() IToken {
 	// TODO: тут встраиваю все для компилятора
 	if s.position < len(s.tokens) {
 		token := s.tokens[s.position]
@@ -37,7 +37,7 @@ func (s *Scanner) GetCompiler() *Compiler {
 	return s.compiler
 }
 
-func ParseFile(filepath string) []Token {
+func ParseFile(filepath string) []IToken {
 	file, errO := os.Open(filepath)
 	if errO != nil {
 		log.Fatalf("can't open file in parser %e", errO)
@@ -46,7 +46,7 @@ func ParseFile(filepath string) []Token {
 		_ = file.Close()
 	}()
 
-	tokens := make([]Token, 0)
+	tokens := make([]IToken, 0)
 
 	scanner := bufio.NewScanner(file)
 	runeScanner := NewRunePosition(scanner)
@@ -55,49 +55,122 @@ func ParseFile(filepath string) []Token {
 		for runeScanner.IsWhiteSpace() {
 			runeScanner.NextRune()
 		}
-		start := runeScanner.GetCurrentPosition()
 
 		switch runeScanner.GetRune() {
 		case '"':
-			tokens = append(tokens, processString())
+			runeScanner.NextRune()
+			tokens = append(tokens, processString(runeScanner))
 		default:
 			if runeScanner.IsLetter() {
-				tokens = append(tokens, processIdentifier())
+				tokens = append(tokens, processIdentifier(runeScanner))
 			} else {
-				tokens = append(tokens, processStartError())
+				if runeScanner.GetRune() == -1 {
+					tokens = append(tokens, NewEOP())
+				} else {
+					fmt.Println("это не планировалось")
+					tokens = append(tokens, processStartError(runeScanner))
+					return tokens
+				}
 			}
 		}
-
-		// TODO: это потереть
-		fmt.Printf("s: %d, %s | ", start, string(runeScanner.GetRune()))
-		runeScanner.NextRune()
 	}
 
 	if err := scanner.Err(); err != nil {
 		log.Fatalf("failed read file by line in parser %e", err)
 	}
 
-	fmt.Println()
-
 	return tokens
 }
 
-// TODO: делаю обработку строки
-func processString() Token {
-	// TODO: функция разбора строки или ошибки
-	// Если message.isError true -> что-то пошло не так, мы получили ошибку, пропустили ее и добавляем ее
-	// иначе мы нашли токен
-	// в любом случае идем дальше
-	return Token{}
+func processString(rs *RunePosition) IToken {
+	currentString := make([]rune, 0)
+	currentString = append(currentString, '"')
+
+	start := rs.GetCurrentPosition()
+
+	for !rs.IsQuote() {
+		if rs.GetRune() == -1 {
+			return NewError("the line didn't end", NewFragment(start, rs.GetCurrentPosition()))
+		}
+		if rs.IsApostrophe() {
+			currentString = append(currentString, rs.GetRune())
+			rs.NextRune()
+			for !rs.IsApostrophe() {
+				if rs.IsLineTranslation() {
+					return NewError("the section didn't end", NewFragment(start, rs.GetCurrentPosition()))
+				}
+				currentString = append(currentString, rs.GetRune())
+				rs.NextRune()
+			}
+			currentString = append(currentString, rs.GetRune())
+			rs.NextRune()
+		} else if rs.IsHashtag() {
+			currentString = append(currentString, rs.GetRune())
+			rs.NextRune()
+			for rs.IsDigit() {
+				currentString = append(currentString, rs.GetRune())
+				rs.NextRune()
+			}
+			if !rs.IsApostrophe() && !rs.IsQuote() && !rs.IsHashtag() {
+				for !rs.IsQuote() && !rs.IsLineTranslation() {
+					rs.NextRune()
+				}
+				rs.NextRune()
+				curPosition := rs.GetCurrentPosition()
+				curPosition.column--
+
+				return NewError("the character code has bad end", NewFragment(start, rs.GetCurrentPosition()))
+			}
+		} else {
+			for !rs.IsQuote() && !rs.IsLineTranslation() {
+				rs.NextRune()
+			}
+			rs.NextRune()
+			curPosition := rs.GetCurrentPosition()
+			curPosition.column--
+			return NewError("symbol is not a section or character code", NewFragment(start, curPosition))
+		}
+	}
+
+	currentString = append(currentString, rs.GetRune())
+	rs.NextRune()
+
+	curPosition := rs.GetCurrentPosition()
+	curPosition.column--
+	return NewString(string(currentString),
+		NewFragment(start, curPosition), string(currentString))
 }
 
-// TODO: делаю обработку индефикатора
-func processIdentifier() Token {
-	return Token{}
+func processIdentifier(rs *RunePosition) IToken {
+	currentIdent := make([]rune, 0)
+
+	start := rs.GetCurrentPosition()
+
+	for !rs.IsWhiteSpace() {
+		if rs.GetRune() == -1 {
+			return Token{}
+		}
+		if rs.IsLetter() || rs.IsDigit() {
+			// Строим слово
+			currentIdent = append(currentIdent, rs.GetRune())
+		} else {
+			// ошибка в Identifier, не буквы или цифры
+			for !rs.IsWhiteSpace() {
+				rs.NextRune()
+			}
+			curPosition := rs.GetCurrentPosition()
+			curPosition.column--
+			return NewError("symbol is not a letter or digit", NewFragment(start, curPosition))
+		}
+		rs.NextRune()
+	}
+	curPosition := rs.GetCurrentPosition()
+	curPosition.column--
+	return NewIdent(string(currentIdent), NewFragment(start, curPosition), string(currentIdent))
 }
 
-// TODO: делаю обработку стартовой ошибки
-func processStartError() Token {
+// TODO: делаю обработку стартовой ошибки - если не с буквы и не с кавычки началось
+func processStartError(rs *RunePosition) IToken {
 	fmt.Println("Разбираем ошибку, что у меня нет таких токенов, с которых могло бы начинаться")
 	return Token{}
 }

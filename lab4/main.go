@@ -5,7 +5,7 @@ import (
 	"lab4/lab_lexer"
 )
 
-const filepath = "test_files/ident_correct.txt"
+const filepath = "test_files/strings_error.txt"
 
 func main() {
 
@@ -13,7 +13,11 @@ func main() {
 
 	tokens := lab_lexer.ParseFile(filepath)
 
-	fmt.Println("tokens", tokens)
+	fmt.Println("tokens")
+
+	for i, t := range tokens {
+		fmt.Println("i:", i, "t:", t)
+	}
 
 	//token := scanner.NextToken()
 	// TODO: сделать итерацию по токенам

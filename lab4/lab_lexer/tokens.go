@@ -2,6 +2,10 @@ package lab_lexer
 
 import "fmt"
 
+type IToken interface {
+	GetType() DomainTag
+}
+
 type Token struct {
 	Type       DomainTag
 	Value      string
@@ -27,6 +31,13 @@ func (f Fragment) String() string {
 type TokenPosition struct {
 	line   int
 	column int
+}
+
+func NewTokenPosition(line, column int) TokenPosition {
+	return TokenPosition{
+		line:   line,
+		column: column,
+	}
 }
 
 func (p *TokenPosition) String() string {
@@ -61,16 +72,46 @@ func NewMessage(isError bool, text string) Message {
 	}
 }
 
-// TODO: сделать встраиванием Token1, Token2 и тд
-
 type ErrorToken struct {
+	Token
+}
+
+func NewError(text string, fragment Fragment) ErrorToken {
+	return ErrorToken{
+		Token: NewToken(ErrTag, text, fragment),
+	}
 }
 
 type EOPToken struct {
+	Token
+}
+
+func NewEOP() EOPToken {
+	return EOPToken{
+		Token: NewToken(EopTag, "end of file", Fragment{}),
+	}
 }
 
 type IdentToken struct {
+	Token
+	attr string
+}
+
+func NewIdent(value string, fragment Fragment, attr string) IdentToken {
+	return IdentToken{
+		Token: NewToken(IdentTag, value, fragment),
+		attr:  attr,
+	}
 }
 
 type StringToken struct {
+	Token
+	attr string
+}
+
+func NewString(value string, fragment Fragment, attr string) StringToken {
+	return StringToken{
+		Token: NewToken(StrTag, value, fragment),
+		attr:  attr,
+	}
 }
