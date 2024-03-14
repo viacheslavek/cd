@@ -4,7 +4,8 @@
 
 # Цель работы
 Целью данной работы является приобретение навыка реализации лексического анализатора на
-объектно-ориентированном языке без применения каких-либо средств автоматизации решения задачи лексического анализа.
+объектно-ориентированном языке без применения каких-либо средств автоматизации решения задачи лексического
+анализа.
 
 # Индивидуальный вариант
 Идентификаторы: последовательности латинских букв и цифр, начинающиеся с буквы.
@@ -313,7 +314,8 @@ func processString(rs *RunePosition) IToken {
 				curPosition := rs.GetCurrentPosition()
 				curPosition.column--
 
-				return NewError("the character code has bad end", NewFragment(start, rs.GetCurrentPosition()))
+				return NewError("the character code has bad end",
+					NewFragment(start, rs.GetCurrentPosition()))
 			}
 		} else {
 			for !rs.IsApostrophe() && !rs.IsLineTranslation() {
@@ -321,7 +323,8 @@ func processString(rs *RunePosition) IToken {
 			}
 			curPosition := rs.GetCurrentPosition()
 			rs.NextRune()
-			return NewError("symbol is not a section or character code", NewFragment(start, curPosition))
+			return NewError("symbol is not a section or character code",
+				NewFragment(start, curPosition))
 		}
 	}
 
