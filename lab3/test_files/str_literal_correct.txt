@@ -1,0 +1,10 @@
+@"aaaaa
+aaaa  bbbb
+ccccc" @"ddd"
+@" aa"" aa"""" a"
+@"aaaa
+aaa
+" @"aaaaaa"
+@"aaaa""aaaaaa" @"aa bb cc"
+@"aaa   bbb    ccc"
+@"aaaa" @"bbbbb"
