@@ -100,3 +100,11 @@ fabric.properties
 # Go workspace file
 go.work
 
+*/.DS_Store
+*/.idea/
+.gitignore
+cd.iml
+ast
+ast_output.txt
+modules.xml
+vcs.xml
