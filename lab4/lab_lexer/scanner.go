@@ -34,7 +34,7 @@ func (s *Scanner) NextToken() IToken {
 	}
 	if token.GetType() == StrTag {
 		newToken := token.(StringToken)
-		newToken.SetText(newToken.Value[1 : len(newToken.Value)-1])
+		newToken.SetText(newToken.Value)
 		return newToken
 	}
 	if token.GetType() == ErrTag {
@@ -68,37 +68,35 @@ func ParseFile(filepath string) []IToken {
 			runeScanner.NextRune()
 		}
 
-		switch runeScanner.GetRune() {
-		case '"':
-			runeScanner.NextRune()
+		if runeScanner.IsApostrophe() || runeScanner.IsHashtag() {
 			tokens = append(tokens, processString(runeScanner))
-		default:
-			if runeScanner.IsLetter() && runeScanner.IsLatinLetter() {
-				tokens = append(tokens, processIdentifier(runeScanner))
+		} else if runeScanner.IsLetter() && runeScanner.IsLatinLetter() {
+			tokens = append(tokens, processIdentifier(runeScanner))
+		} else {
+			if runeScanner.GetRune() == -1 {
+				tokens = append(tokens, NewEOP())
 			} else {
-				if runeScanner.GetRune() == -1 {
-					tokens = append(tokens, NewEOP())
-				} else {
-					tokens = append(tokens, processStartError(runeScanner))
-				}
+				tokens = append(tokens, processStartError(runeScanner))
 			}
 		}
+
 	}
 
 	if err := scanner.Err(); err != nil {
 		log.Fatalf("failed read file by line in parser %e", err)
 	}
 
+	tokens = append(tokens, NewEOP())
+
 	return tokens
 }
 
 func processString(rs *RunePosition) IToken {
 	currentString := make([]rune, 0)
-	currentString = append(currentString, '"')
 
 	start := rs.GetCurrentPosition()
 
-	for !rs.IsQuote() {
+	for !rs.IsWhiteSpace() {
 		if rs.GetRune() == -1 {
 			return NewError("the line didn't end", NewFragment(start, rs.GetCurrentPosition()))
 		}
@@ -121,8 +119,8 @@ func processString(rs *RunePosition) IToken {
 				currentString = append(currentString, rs.GetRune())
 				rs.NextRune()
 			}
-			if !rs.IsApostrophe() && !rs.IsQuote() && !rs.IsHashtag() {
-				for !rs.IsQuote() && !rs.IsLineTranslation() {
+			if !rs.IsWhiteSpace() && !rs.IsHashtag() && !rs.IsApostrophe() {
+				for !rs.IsWhiteSpace() {
 					rs.NextRune()
 				}
 				rs.NextRune()
@@ -132,21 +130,18 @@ func processString(rs *RunePosition) IToken {
 				return NewError("the character code has bad end", NewFragment(start, rs.GetCurrentPosition()))
 			}
 		} else {
-			for !rs.IsQuote() && !rs.IsLineTranslation() {
+			for !rs.IsApostrophe() && !rs.IsLineTranslation() {
 				rs.NextRune()
 			}
-			rs.NextRune()
 			curPosition := rs.GetCurrentPosition()
-			curPosition.column--
+			rs.NextRune()
 			return NewError("symbol is not a section or character code", NewFragment(start, curPosition))
 		}
 	}
 
-	currentString = append(currentString, rs.GetRune())
+	curPosition := rs.GetCurrentPosition()
 	rs.NextRune()
 
-	curPosition := rs.GetCurrentPosition()
-	curPosition.column--
 	return NewString(string(currentString),
 		NewFragment(start, curPosition))
 }
@@ -155,6 +150,7 @@ func processIdentifier(rs *RunePosition) IToken {
 	currentIdent := make([]rune, 0)
 
 	start := rs.GetCurrentPosition()
+	curPositionToken := rs.GetCurrentPosition()
 
 	for !rs.IsWhiteSpace() {
 		if rs.GetRune() == -1 {
@@ -165,32 +161,29 @@ func processIdentifier(rs *RunePosition) IToken {
 			currentIdent = append(currentIdent, rs.GetRune())
 		} else {
 			// ошибка в Identifier, не буквы или цифры
+			curPosition := rs.GetCurrentPosition()
 			for !rs.IsWhiteSpace() {
+				curPosition = rs.GetCurrentPosition()
 				rs.NextRune()
 			}
-			curPosition := rs.GetCurrentPosition()
-			curPosition.column--
 			return NewError("symbol is not a latin letter or digit", NewFragment(start, curPosition))
 		}
+		curPositionToken = rs.GetCurrentPosition()
 		rs.NextRune()
 	}
-	curPosition := rs.GetCurrentPosition()
-	curPosition.column--
-	return NewIdent(string(currentIdent), NewFragment(start, curPosition))
+	return NewIdent(string(currentIdent), NewFragment(start, curPositionToken))
 }
 
 func processStartError(rs *RunePosition) IToken {
 
 	startPosition := rs.GetCurrentPosition()
+	curPosition := rs.GetCurrentPosition()
 	for !rs.IsWhiteSpace() {
 		if rs.GetRune() == -1 {
 			return Token{}
 		}
+		curPosition = rs.GetCurrentPosition()
 		rs.NextRune()
 	}
-
-	curPosition := rs.GetCurrentPosition()
-	curPosition.column--
-
 	return NewError("start is not a quote or letter", NewFragment(startPosition, curPosition))
 }

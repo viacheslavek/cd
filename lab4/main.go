@@ -5,7 +5,7 @@ import (
 	"lab4/lab_lexer"
 )
 
-const filepath = "test_files/ident_error.txt"
+const filepath = "test_files/mixed.txt"
 
 func main() {
 

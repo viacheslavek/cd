@@ -1,5 +1,5 @@
-"'asdf'"  "" "#10"
-"'asdf''hjk'#15aa" "b#16#17#18"
-"'' " "'asd fgh 20 klj: qwerty'"
-"'asd ' asd'" "'asd''asd'" "''''"
-"'hello' #10 #13'world'"
+'asdf' #10
+'asdf''hjk'#15aa b#16#17#18
+'' 'asd fgh 20 klj: qwerty'
+'asd ' asd' 'asd''asd'
+'hello' #10 #13'world'

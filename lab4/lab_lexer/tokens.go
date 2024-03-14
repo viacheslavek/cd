@@ -1,6 +1,10 @@
 package lab_lexer
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+	"strings"
+)
 
 type IToken interface {
 	GetType() DomainTag
@@ -123,7 +127,27 @@ func NewString(value string, fragment Fragment) StringToken {
 }
 
 func (st *StringToken) SetText(text string) {
-	st.attr = text
+	newText := processText(text)
+	st.attr = newText
+}
+
+func processText(text string) string {
+	newTexts := strings.Split(text, "#")
+	ans := ""
+	for _, nt := range newTexts {
+		if len(nt) == 0 {
+		} else if nt[0] == '\'' {
+			nt = strings.Replace(nt, "''", "'", -1)
+			ans += nt[1 : len(nt)-1]
+		} else {
+			num, err := strconv.Atoi(nt)
+			if err != nil {
+				fmt.Println("num problem")
+			}
+			ans += string(rune(num))
+		}
+	}
+	return ans
 }
 
 func (st StringToken) String() string {
