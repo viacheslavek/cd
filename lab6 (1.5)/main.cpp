@@ -96,7 +96,7 @@ void init_scanner (char *program)
 void err (char *msg)
 {
     // TODO: кладу ошибки в список ошибок
-    printf ("Error");
+    printf("Error");
     print_pos(&cur);
     printf(":%s\n",msg);
 }
