@@ -1,3 +1,19 @@
+% Лабораторная работа № 1.5 «Порождение лексического анализатора с помощью flex»
+% <лабораторная ещё не сдана>
+% Вячеслав Локшин, ИУ9-61Б
+
+# Цель работы
+Целью данной работы является изучение генератора лексических анализаторов flex.
+
+# Индивидуальный вариант
+Идентификаторы: последовательности буквенных символов ASCII, цифр и дефисов,
+начинающиеся с заглавной буквы.
+Директивы: любой знак валюты, после которого следует непустая последовательность заглавных букв.
+Знаки операций: «(», «)», «<», «>».
+
+# Реализация
+
+```lex
 %option noyywrap bison-bridge bison-locations
 %{
 
@@ -279,3 +295,104 @@ int main()
 
     return 0;
 }
+
+```
+
+# Тестирование
+
+Для тестирования было написано несколько тестирующих файлов,
+покрывающих большую часть тестовых случаев
+
+Входные данные
+
+Файл `direct_correct.txt`
+```
+$QWE $ER $AS
+$QWERTY
+```
+
+Файл `direct_error.txt`
+```
+$WER $ _ $RUB
+$wer $___ $US $
+```
+
+Файл `ident_correct.txt`
+```
+Hello Slava123
+Vanya19-12
+VOVA VLadiMIr
+Anton- Ale----xey
+Iv1An5e
+```
+
+Файл `ident_error.txt`
+```
+hello Slava123
+Vanya19----12_
+VOVA__ VLadiMIr
+-Anton- Ale-xey
+Iv1An5e
+```
+
+Файл `mixed.txt`
+```
+(())<()> < $ER $AS
+$ _ $RUB Vanya19----12_
+Anton- Ale----xey
+```
+
+Файл `operation_correct.txt`
+```
+( ) < <
+> < ( ( >
+(( << >> ))
+((()))<(())>()
+```
+
+Файл `operation_error.txt`
+```
+( ) < -
+_ ) [ ]
+<) (>
+(- -)
+```
+
+Вывод на `stdout` для *mixed.txt*
+
+```
+START
+TAG_OPERATION_OPEN_BRACKET (1,1)-(1,2): (
+TAG_OPERATION_OPEN_BRACKET (1,2)-(1,3): (
+TAG_OPERATION_CLOSE_BRACKET (1,3)-(1,4): )
+TAG_OPERATION_CLOSE_BRACKET (1,4)-(1,5): )
+TAG_OPERATION_LOWER (1,5)-(1,6): <
+TAG_OPERATION_OPEN_BRACKET (1,6)-(1,7): (
+TAG_OPERATION_CLOSE_BRACKET (1,7)-(1,8): )
+TAG_OPERATION_BIGGER (1,8)-(1,9): >
+TAG_OPERATION_LOWER (1,10)-(1,11): <
+DIRECT (1,12)-(1,15): $ER
+DIRECT (1,16)-(1,19): $AS
+DIRECT (2,5)-(2,9): $RUB
+IDENT (2,10)-(2,23): 0
+IDENT (3,1)-(3,7): 1
+IDENT (3,8)-(3,18): 2
+
+Identifier Table:
+0: Vanya19----12
+1: Anton-
+2: Ale----xey
+
+Error at (2,2): ERROR unknown symbol
+Error at (2,4): ERROR unknown symbol
+Error at (2,24): ERROR unknown symbol
+
+FINISH
+
+```
+
+# Вывод
+В ходе данной работы был изучен генератор лексических анализаторов flex и
+написана программа, распознающая идентификаторы, директивы и операции по условию задачи.
+
+
