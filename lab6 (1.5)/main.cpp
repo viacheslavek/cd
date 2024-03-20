@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <vector>
 
 #define TAG_IDENT                     1
 #define TAG_DIRECT                    2
@@ -93,16 +94,31 @@ void init_scanner (char *program)
     yy_scan_string(program);
 }
 
-void err (char *msg)
-{
-    // TODO: кладу ошибки в список ошибок
-    printf("Error");
-    print_pos(&cur);
-    printf(":%s\n",msg);
+struct Error {
+    Position pos;
+    char     *message;
+};
+
+std::vector<Error> errors;
+
+void add_error(Position pos, char* message) {
+    Error error;
+    error.pos = pos;
+    error.message = message;
+    errors.push_back(error);
+}
+
+void print_errors() {
+    for (auto& error : errors) {
+        printf("Error at ");
+        print_pos(&(error.pos));
+        printf(": %s\n", error.message);
+    }
 }
 
 // TODO: здесь описываю свои функции работы с таблицами идентификаторов
 // мне нужны create_ident_table, add_ident_table, print_ident_table
+// В плюсах это будет не сложно
 
 %}
 
@@ -111,42 +127,60 @@ OPERATION_CLOSE_BRACKET    [)]
 OPERATION_LOWER            [<]
 OPERATION_BIGGER           [>]
 
+CAPITAL_LETTER [A-Z]
+LETTER         [a-z]
+
+DIRECT_START   [$]
+DIRECT         {DIRECT_START}{CAPITAL_LETTER}+
+
+DIGIT          [0-9]
+DASH           [-]
+IDENT          {CAPITAL_LETTER}({CAPITAL_LETTER}|{LETTER}|{DIGIT}|{DASH})*
+
+
 %%
+
+{OPERATION_OPEN_BRACKET}   {
+                               yylval->operation = yytext;
+                               return TAG_OPERATION_OPEN_BRACKET;
+                           }
+{OPERATION_CLOSE_BRACKET}  {
+                               yylval->operation = yytext;
+                               return TAG_OPERATION_CLOSE_BRACKET;
+                           }
+{OPERATION_LOWER}          {
+                               yylval->operation = yytext;
+                               return TAG_OPERATION_LOWER;
+                           }
+{OPERATION_BIGGER}         {
+                               yylval->operation = yytext;
+                               return TAG_OPERATION_BIGGER;
+                           }
+
+
+{DIRECT}  {
+              yylval->direct = yytext;
+              return TAG_DIRECT;
+          }
+
+
+{IDENT}  {
+             // TODO: добавляю в таблицу id
+             printf("DELETE THIS IDENT: %s | ", yytext);
+             yylval->ident_num = 0;
+             return TAG_IDENT;
+         }
+
 
 [\n\t ]+
 
-{OPERATION_OPEN_BRACKET}    {
-                                yylval->operation = yytext;
-                                return TAG_OPERATION_OPEN_BRACKET;
-                            }
+.            add_error(cur, "ERROR unknown symbol");
 
-{OPERATION_CLOSE_BRACKET}   {
-                                yylval->operation = yytext;
-                                return TAG_OPERATION_CLOSE_BRACKET;
-                            }
-
-{OPERATION_LOWER}           {
-                                yylval->operation = yytext;
-                                return TAG_OPERATION_LOWER;
-                            }
-
-{OPERATION_BIGGER}          {
-                                yylval->operation = yytext;
-                                return TAG_OPERATION_BIGGER;
-                            }
-
-.                           err("ERROR unknown symbol");
-
-<<EOF>>                     return 0;
+<<EOF>>      return 0;
 
 
 %%
 
-// TODO: добавить - два состояния - доллар, потом просто заглавные буквы, но не пустые!
-// Директивы: любой знак валюты ($), после которого следует непустая последовательность заглавных букв.
-
-// TODO: добавить - два состояния - заглавная буква, потом буквы, цифры и дефис
-// Идентификаторы: последовательности буквенных символов ASCII, цифр и дефисов, начинающиеся с заглавной буквы.
 
 int main()
 {
@@ -159,7 +193,7 @@ int main()
 	char *buf;
 
     {
-        input = fopen("test_files/operation_error.txt","r");
+        input = fopen("test_files/ident_error.txt","r");
         fseek(input, 0, SEEK_END);
         size = ftell(input);
         rewind(input);
@@ -205,6 +239,8 @@ int main()
         }
     }
     while (tag != 0);
+
+    print_errors();
 
     free(buf);
 
