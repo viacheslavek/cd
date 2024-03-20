@@ -5,6 +5,9 @@
 #include <stdlib.h>
 
 #include <vector>
+#include <unordered_map>
+#include <string>
+#include <iostream>
 
 #define TAG_IDENT                     1
 #define TAG_DIRECT                    2
@@ -116,9 +119,35 @@ void print_errors() {
     }
 }
 
-// TODO: здесь описываю свои функции работы с таблицами идентификаторов
-// мне нужны create_ident_table, add_ident_table, print_ident_table
-// В плюсах это будет не сложно
+
+class IdentifierTable {
+private:
+    std::vector<std::string> identifiers;
+    std::unordered_map<std::string, int> indexMap;
+
+public:
+    int add_identifier(const std::string& identifier) {
+        auto it = indexMap.find(identifier);
+        if (it != indexMap.end()) {
+            return it->second;
+        } else {
+            int index = identifiers.size();
+            identifiers.push_back(identifier);
+            indexMap[identifier] = index;
+            return index;
+        }
+    }
+
+    void print_identifiers() const {
+        std::cout << "Identifier Table:\n";
+        for (int i = 0; i < identifiers.size(); ++i) {
+            std::cout << i << ": " << identifiers[i] << std::endl;
+        }
+    }
+};
+
+IdentifierTable table;
+
 
 %}
 
@@ -165,9 +194,7 @@ IDENT          {CAPITAL_LETTER}({CAPITAL_LETTER}|{LETTER}|{DIGIT}|{DASH})*
 
 
 {IDENT}  {
-             // TODO: добавляю в таблицу id
-             printf("DELETE THIS IDENT: %s | ", yytext);
-             yylval->ident_num = 0;
+             yylval->ident_num = table.add_identifier(yytext);
              return TAG_IDENT;
          }
 
@@ -181,6 +208,9 @@ IDENT          {CAPITAL_LETTER}({CAPITAL_LETTER}|{LETTER}|{DIGIT}|{DASH})*
 
 %%
 
+// TODO: добавить mixed тест
+
+// TODO: стоит ли некоторые методы переводить с *char на std::string?
 
 int main()
 {
@@ -239,6 +269,8 @@ int main()
         }
     }
     while (tag != 0);
+
+    table.print_identifiers();
 
     print_errors();
 

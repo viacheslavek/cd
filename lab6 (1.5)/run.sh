@@ -1,4 +1,4 @@
 #!/bin/sh
 flex main.cpp
-g++ lex.yy.c
-./a.out
+g++ -std=c++17 lex.yy.c -o main
+./main
