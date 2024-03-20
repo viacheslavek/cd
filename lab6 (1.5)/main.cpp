@@ -112,6 +112,7 @@ void add_error(Position pos, char* message) {
 }
 
 void print_errors() {
+    printf("ERRORS\n")
     for (auto& error : errors) {
         printf("Error at ");
         print_pos(&(error.pos));
