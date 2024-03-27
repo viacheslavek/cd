@@ -1,0 +1,212 @@
+
+Приведем описание абстрактного и конкретного синтаксиса для задания
+
+Определения структур, объединений и перечислений языка Си.
+В инициализаторах перечислений допустимы знаки операций +, -, *, /, sizeof,
+операндами могут служить имена перечислимых значений и целые числа.
+
+Числовые константы могут быть только целочисленными и десятичными.
+
+Примеры синтаксиса можно увидеть в папке tests
+
+Поначалу я составлял синтаксис сам, но спустя часы некорректного составления я обратился к стандарту
+ISO/IEC 9899:1999 (E), где почерпнул некоторые идеи
+
+Абстрактный синтаксис:
+
+Изначально мне дается набор структур, перечеслений и объеденений
+
+Declaration -> DeclarationSpecifiers ;
+
+DeclarationSpecifiers -> TypeSpecifier DeclarationSpecifiersOpt
+
+DeclarationSpecifiersOpt -> DeclarationSpecifiers | ε
+
+TypeSpecifier -> SimpleType
+                    | EnumSpecifier
+                    | StructOrUnionSpecifier
+
+SimpleType -> CHAR | SHORT | INT | LONG | FLOAT | DOUBLE | SIGNED | UNSIGNED
+
+
+EnumSpecifier -> ENUM IdentifierOpt { EnumeratorList }
+                    | ENUM IdentifierOpt { EnumeratorList , }
+                    | ENUM Identifier
+
+EnumeratorList -> Enumerator | EnumeratorList , Enumerator
+
+Enumerator -> EnumeratorConstant | EnumeratorConstant = ConstantExpression
+
+IdentifierOpt -> Identifier | ε
+
+EnumeratorConstant -> Identifier
+
+Identifier -> IDENTIFIER
+
+
+// Опустим многие преобразования из ISO и упростим до нужного нам примера
+
+ConstantExpression -> Expression
+
+Expression -> VARNAME
+                | Const
+                | Expression BinaryOperation Expression
+                | UnaryOperation Expression
+
+Const -> INT_CONST | REAL_CONST
+
+BinaryOperation -> + | - | * | /
+
+UnaryOperation -> + | - | sizeof ( TypeName )
+
+TypeName -> TypeSpecifier AbstractDeclaratorOpt
+
+AbstractDeclaratorOpt -> AbstractDeclarator | ε
+
+AbstractDeclarator -> Pointer | PointerOpt DirectAbstractDeclarator
+
+PointerOpt -> Pointer | ε
+
+Pointer -> * PointerOpt
+
+DirectAbstractDeclaratorOpt -> DirectAbstractDeclarator | ε
+
+DirectAbstractDeclarator -> ( AbstractDeclarator )
+                                | DirectAbstractDeclaratorOpt [ Expression ]
+
+
+
+StructOrUnionSpecifier -> StructOrUnion IdentifierOpt { StructDeclarationList }
+                            | StructOrUnion Identifier
+
+StructOrUnion -> STRUCT | UNION
+
+StructDeclarationList -> StructDeclaration
+                            | StructDeclarationList StructDeclaration
+
+StructDeclaration -> TypeSpecifier ;
+
+
+
+
+
+
+
+
+Конкретный синтаксис:
+
+Declaration -> DeclarationSpecifiers ;
+
+DeclarationSpecifiers -> TypeSpecifier DeclarationSpecifiersOpt
+
+DeclarationSpecifiersOpt -> DeclarationSpecifiers | ε
+
+TypeSpecifier -> CHAR | SHORT | INT | LONG | FLOAT | DOUBLE | SIGNED | UNSIGNED
+                        | EnumSpecifier
+                        | StructOrUnionSpecifier
+
+
+EnumSpecifier -> ENUM IdentifierOpt { EnumeratorList }
+                    | ENUM IdentifierOpt { EnumeratorList , }
+                    | ENUM Identifier
+
+EnumeratorList -> Enumerator | EnumeratorList , Enumerator
+
+Enumerator -> EnumeratorConstant | EnumeratorConstant = ConstantExpression
+
+IdentifierOpt -> Identifier | ε
+
+EnumeratorConstant -> Identifier
+
+Identifier -> IDENTIFIER
+
+
+// Опустим многие преобразования из ISO и упростим до нужного нам примера
+
+ConstantExpression -> Expression
+
+Expression -> AdditiveExpression
+
+AdditiveExpression -> MultiplicativeExpression
+                        | AdditiveExpression + MultiplicativeExpression
+                        | AdditiveExpression - MultiplicativeExpression
+
+MultiplicativeExpression -> UnaryExpression
+                                | MultiplicativeExpression * UnaryExpression
+                                | MultiplicativeExpression / UnaryExpression
+
+UnaryExpression -> UnaryOperator PrimaryExpression | SIZEOF ( TypeName )
+
+PrimaryExpression -> Identifier | Constant | ( Expression )
+
+Constant -> INT_CONSTANT | REAL_CONSTANT
+
+TypeName -> TypeSpecifier AbstractDeclaratorOpt
+
+AbstractDeclaratorOpt -> AbstractDeclarator | ε
+
+AbstractDeclarator -> Pointer | PointerOpt DirectAbstractDeclarator
+
+PointerOpt -> Pointer | ε
+
+Pointer -> * PointerOpt
+
+DirectAbstractDeclaratorOpt -> DirectAbstractDeclarator | ε
+
+DirectAbstractDeclarator -> ( AbstractDeclarator )
+                                | DirectAbstractDeclaratorOpt [ Expression ]
+
+
+
+StructOrUnionSpecifier -> StructOrUnion IdentifierOpt { StructDeclarationList }
+                            | StructOrUnion Identifier
+
+StructOrUnion -> STRUCT | UNION
+
+StructDeclarationList -> StructDeclaration
+                            | StructDeclarationList StructDeclaration
+
+StructDeclaration -> TypeSpecifier ;
+
+
+Перейдем к реализации
+
+
+
+
+// Пока сокращу грамматику до enum без арифметики и реализую ее:
+
+
+Declaration -> DeclarationSpecifiers ;
+
+DeclarationSpecifiers -> TypeSpecifier DeclarationSpecifiersOpt
+
+DeclarationSpecifiersOpt -> DeclarationSpecifiers | ε
+
+
+TypeSpecifier -> SimpleType
+                    | EnumSpecifier
+                    | StructOrUnionSpecifier
+
+SimpleType -> CHAR | SHORT | INT | LONG | FLOAT | DOUBLE | SIGNED | UNSIGNED
+
+
+EnumSpecifier -> ENUM EnumStatement
+
+EnumStatement -> IdentifierOpt { EnumeratorList CommaOpt } | Identifier
+
+CommaOpt -> , | ε
+
+EnumeratorList -> Enumerator | EnumeratorList , Enumerator
+
+Enumerator -> EnumeratorConstant EnumeratorExpressionOpt
+
+EnumeratorConstant -> Identifier
+
+IdentifierOpt -> Identifier | ε
+
+Identifier -> IDENTIFIER
+
+EnumeratorExpressionOpt -> = ConstantExpression | ε
+
+ConstantExpression -> INT_CONSTANT
