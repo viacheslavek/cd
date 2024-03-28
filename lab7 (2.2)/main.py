@@ -8,7 +8,6 @@ from pprint import pprint
 
 
 # TODO: пока делаю все для enum
-# TODO: делаю так же, как в примере, но по своему синтаксису
 class SimpleType(enum.Enum):
     Char = "CHAR"
     Short = "SHORT"
@@ -20,13 +19,50 @@ class SimpleType(enum.Enum):
     Unsigned = "UNSIGNED"
 
 
-class Declaration(abc.ABC):
+@dataclass
+class TypeSpecifier(abc.ABC):
     pass
 
 
 @dataclass
-class BlockDeclarationSpecifier(Statement):
-    body: list[Statement]
+class SimpleTypeSpecifier(TypeSpecifier):
+    simpleType: SimpleType
+
+
+@dataclass
+class EnumSpecifier:
+    pass
+
+
+@dataclass
+class EnumTypeSpecifier(TypeSpecifier):
+    enumSpecifier: EnumSpecifier
+
+
+@dataclass
+class AbstractDeclaratorOpt(abc.ABC):
+    pass
+
+
+@dataclass
+class AbstractDeclarator(AbstractDeclaratorOpt):
+    ident: str
+
+
+@dataclass
+class AbstractEpsilon(AbstractDeclaratorOpt):
+    pass
+
+
+@dataclass
+class Declaration:
+    typeSpecifier: TypeSpecifier
+    abstractDeclaratorOpt: AbstractDeclaratorOpt
+
+
+@dataclass
+class DeclarationList:
+    declarations: list[Declaration]
 
 
 # TODO: делаю так же, как в примере, но по своему синтаксису
@@ -35,6 +71,9 @@ NProgram = map(pe.NonTerminal, "Program")
 
 def main():
     p = pe.Parser(NProgram)
+
+    p.print_table()
+
     assert p.is_lalr_one()
 
     p.add_skipped_domain('\\s')

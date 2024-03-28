@@ -174,19 +174,22 @@ StructDeclaration -> TypeSpecifier ;
 
 
 
-// Пока сокращу грамматику до enum без арифметики и реализую ее:
 
 
-Declaration -> DeclarationSpecifiers ;
+// Пока сокращу грамматику до enum без арифметики, без сложных переменных и реализую ее:
 
-DeclarationSpecifiers -> TypeSpecifier DeclarationSpecifiersOpt
+DeclarationList -> DeclarationList Declaration | Declaration
 
-DeclarationSpecifiersOpt -> DeclarationSpecifiers | ε
+Declaration -> TypeSpecifier AbstractDeclaratorOpt ;
 
+AbstractDeclaratorOpt -> AbstractDeclarator | ε
+
+// Пока упрощу переменные
+
+AbstractDeclarator -> IDENTIFIER
 
 TypeSpecifier -> SimpleType
                     | EnumSpecifier
-                    | StructOrUnionSpecifier
 
 SimpleType -> CHAR | SHORT | INT | LONG | FLOAT | DOUBLE | SIGNED | UNSIGNED
 
@@ -208,5 +211,7 @@ IdentifierOpt -> Identifier | ε
 Identifier -> IDENTIFIER
 
 EnumeratorExpressionOpt -> = ConstantExpression | ε
+
+// Пока упрощу выражения
 
 ConstantExpression -> INT_CONSTANT
