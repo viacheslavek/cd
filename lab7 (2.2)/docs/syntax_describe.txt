@@ -237,5 +237,19 @@ EnumeratorExpressionOpt -> = ConstantExpression | ε
 CommaOpt -> , | ε
 
 
-//  TODO: потом добавить сюда выражения математические
-ConstantExpression -> INT
+ConstantExpression -> Expression
+
+Expression -> ArithmeticExpression
+
+ArithmeticExpression -> Term | + Term | - Term | ArithmeticExpression AddOperation Term
+
+AddOperation -> + | -
+
+Term -> Factor | Term MultyOperation Factor
+MultyOperation -> * | /
+
+Factor -> IDENTIFIER | INT | ( Expression )
+
+// TODO: Добавляю в Factor sizeof
+
+Factor -> sizeof ( TypeSpecifier AbstractDeclaratorsOpt ) | IDENTIFIER | INT | ( Expression )
