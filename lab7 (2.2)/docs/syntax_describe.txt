@@ -12,9 +12,7 @@
 Поначалу я составлял синтаксис сам, но спустя часы некорректного составления я обратился к стандарту
 ISO/IEC 9899:1999 (E), где почерпнул некоторые идеи
 
-Абстрактный синтаксис:
-
-Изначально мне дается набор структур, перечеслений и объеденений
+Абстрактный синтаксис (старая версия):
 
 Declaration -> DeclarationSpecifiers ;
 
@@ -93,7 +91,7 @@ StructDeclaration -> TypeSpecifier ;
 
 
 
-Конкретный синтаксис:
+Конкретный синтаксис (старая версия):
 
 Declaration -> DeclarationSpecifiers ;
 
@@ -181,44 +179,6 @@ StructDeclaration -> TypeSpecifier ;
 
 
 
-// Пока сокращу грамматику до enum без арифметики, без сложных переменных и реализую ее:
-
-
-FullEnumStatement -> IdentifierOpt { EnumeratorList CommaOpt }      // готово ?
-
-CommaOpt -> , | ε                                                   // готово ?
-
-EnumeratorList -> Enumerator | EnumeratorList , Enumerator          // готово ?
-
-Enumerator -> EnumeratorConstant EnumeratorExpressionOpt            // готово ?
-
-EnumeratorConstant -> IDENTIFIER                                     // готово ?
-
-
-EnumeratorExpressionOpt -> = ConstantExpression | ε                  // готово ?
-
-// Пока упрощу выражения
-
-ConstantExpression -> INT                                   // готово ?
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -228,17 +188,34 @@ Program -> DeclarationList
 
 DeclarationList -> Declaration | DeclarationList Declaration
 
-// TODO: вместо AbstractDeclaratorOpt нужно AbstractDeclaratorsOpt, который раскрывается в список из AbstractDeclarator
+Declaration -> TypeSpecifier AbstractDeclaratorsOpt ;
 
-Declaration -> TypeSpecifier AbstractDeclaratorOpt ;
 
-TypeSpecifier -> SimpleTypeSpecifier
-                    | EnumTypeSpecifier
+AbstractDeclaratorsOpt -> AbstractDeclarators | ε
+
+AbstractDeclarators -> AbstractDeclarators , AbstractDeclarator | AbstractDeclarator
 
 AbstractDeclaratorOpt -> AbstractDeclarator | ε
 
 // TODO:  Потом это усложнится - добавится возможный указатель в начале и возможные скобки [...] в конце
-AbstractDeclarator -> IDENTIFIER
+
+AbstractDeclarator -> NPointerOpt IDENTIFIER
+
+__________________________________________________
+// Сделаю что-то типо
+
+AbstractDeclarator -> NPointerOpt IDENTIFIER ListArraysOpt
+
+NPointerOpt -> POINTER
+
+ListArraysOpt -> [ ModifySimpleType ] ListArraysOpt | ε
+
+ModifySimpleType -> SimpleType | IDENTIFIER
+
+____________________________________________________
+
+TypeSpecifier -> SimpleTypeSpecifier
+                    | EnumTypeSpecifier
 
 
 SimpleTypeSpecifier -> SimpleType
@@ -256,8 +233,15 @@ IdentifierOpt -> IDENTIFIER | ε
 
 EmptyEnumStatement -> IDENTIFIER
 
-// TODO: потом сделать из этого список
-EnumeratorList -> IDENTIFIER
+EnumeratorList -> EnumeratorList , Enumerator | Enumerator
+
+Enumerator -> IDENTIFIER EnumeratorExpressionOpt
+
+EnumeratorExpressionOpt -> = ConstantExpression | ε
 
 
 CommaOpt -> , | ε
+
+
+//  TODO: потом добавить сюда выражения математические
+ConstantExpression -> INT

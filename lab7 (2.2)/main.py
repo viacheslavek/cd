@@ -1,15 +1,24 @@
 import abc
 import enum
 import parser_edsl as pe
-import re
-import typing
 from dataclasses import dataclass
 from pprint import pprint
 
 
 @dataclass
-class EnumeratorList:
+class ConstantExpression:
     body: str
+
+
+@dataclass
+class Enumerator:
+    identifier: str
+    constantExpression: ConstantExpression
+
+
+@dataclass
+class EnumeratorList:
+    body: list[Enumerator]
 
 
 @dataclass
@@ -31,7 +40,7 @@ class EnumTypeSpecifier(TypeSpecifier):
 class FullEnumStatement(EnumStatement):
     identifier: str
     enumeratorList: EnumeratorList
-    endComma: bool
+    isEndComma: bool
 
 
 @dataclass
@@ -51,6 +60,17 @@ class SimpleType(enum.Enum):
 
 
 @dataclass
+class AbstractDeclarator:
+    pointer: str
+    declarator: str
+
+
+@dataclass
+class AbstractDeclaratorsOpt:
+    abstractDeclaratorList: list[AbstractDeclarator]
+
+
+@dataclass
 class SimpleTypeSpecifier(TypeSpecifier):
     simpleType: SimpleType
 
@@ -58,7 +78,7 @@ class SimpleTypeSpecifier(TypeSpecifier):
 @dataclass
 class Declaration:
     declarationBody: TypeSpecifier
-    varName: str
+    varName: AbstractDeclaratorsOpt
 
 
 @dataclass
@@ -71,7 +91,8 @@ NProgram = pe.NonTerminal('Program')
 NDeclarationList = pe.NonTerminal('DeclarationList')
 NDeclaration = pe.NonTerminal('Declaration')
 
-NAbstractDeclaratorOpt = pe.NonTerminal('AbstractDeclaratorOpt')
+NAbstractDeclaratorsOpt = pe.NonTerminal('AbstractDeclaratorsOpt')
+NAbstractDeclarators = pe.NonTerminal('AbstractDeclarators')
 NAbstractDeclarator = pe.NonTerminal('AbstractDeclarator')
 
 NTypeSpecifier = pe.NonTerminal('TypeSpecifier')
@@ -87,10 +108,15 @@ NFullEnumStatement = pe.NonTerminal('FullEnumStatement')
 NEmptyEnumStatement = pe.NonTerminal('EmptyEnumStatement')
 
 NEnumeratorList = pe.NonTerminal('EnumeratorList')
+NEnumerator = pe.NonTerminal('Enumerator')
+
+NEnumeratorExpressionOpt = pe.NonTerminal('EnumeratorExpressionOpt')
+NConstantExpression = pe.NonTerminal('ConstantExpression')
 
 NIdentifierOpt = pe.NonTerminal('IdentifierOpt')
 
 NCommaOpt = pe.NonTerminal('CommaOpt')
+NPointerOpt = pe.NonTerminal('PointerOpt')
 
 
 def make_keyword(image):
@@ -102,7 +128,9 @@ KW_ENUM = make_keyword('enum')
 KW_CHAR, KW_SHORT, KW_INT, KW_LONG, KW_FLOAT, KW_DOUBLE, KW_SIGNED, KW_UNSIGNED = \
     map(make_keyword, 'char short int long float double signed unsigned'.split())
 
-KW_IDENTIFIER = pe.Terminal('IDENT', '[A-Za-z_][A-Za-z_0-9]*', str)
+KW_IDENTIFIER = pe.Terminal('IDENTIFIER', r'[A-Za-z_]([A-Za-z_0-9])*', str)
+
+KW_POINTER = pe.Terminal('POINTER', r'(\*)*', str)
 
 
 NProgram |= NDeclarationList, Program
@@ -110,12 +138,18 @@ NProgram |= NDeclarationList, Program
 NDeclarationList |= lambda: []
 NDeclarationList |= NDeclarationList, NDeclaration, lambda dl, d: dl + [d]
 
-NDeclaration |= NTypeSpecifier, NAbstractDeclaratorOpt, ';', Declaration
+NDeclaration |= NTypeSpecifier, NAbstractDeclaratorsOpt, ';', Declaration
 
-NAbstractDeclaratorOpt |= lambda: ""
-NAbstractDeclaratorOpt |= NAbstractDeclarator
+NAbstractDeclaratorsOpt |= lambda: []
+NAbstractDeclaratorsOpt |= NAbstractDeclarators
 
-NAbstractDeclarator |= KW_IDENTIFIER
+NAbstractDeclarators |= NAbstractDeclarator, lambda a: [a]
+NAbstractDeclarators |= NAbstractDeclarators, ',', NAbstractDeclarator, lambda ads, a: ads + [a]
+
+NAbstractDeclarator |= NPointerOpt, KW_IDENTIFIER, AbstractDeclarator
+
+NPointerOpt |= KW_POINTER
+NPointerOpt |= lambda: ""
 
 NTypeSpecifier |= NEnumTypeSpecifier, EnumTypeSpecifier
 NTypeSpecifier |= NSimpleTypeSpecifier, SimpleTypeSpecifier
@@ -145,10 +179,19 @@ NEnumStatement |= NEmptyEnumStatement, EmptyEnumStatement
 
 NEmptyEnumStatement |= KW_IDENTIFIER
 
-NEnumeratorList |= KW_IDENTIFIER
+NEnumeratorList |= NEnumerator, lambda e: [e]
+NEnumeratorList |= NEnumeratorList, ',', NEnumerator, lambda el, e: el + [e]
 
-NCommaOpt |= ',', lambda: False
-NCommaOpt |= lambda: True
+NEnumerator |= KW_IDENTIFIER, NEnumeratorExpressionOpt, Enumerator
+
+NEnumeratorExpressionOpt |= '=', NConstantExpression
+NEnumeratorExpressionOpt |= lambda: ""
+
+# TODO: потом тут будет вычисление выражения
+NConstantExpression |= KW_IDENTIFIER
+
+NCommaOpt |= ',', lambda: True
+NCommaOpt |= lambda: False
 
 
 def main():
