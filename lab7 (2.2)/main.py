@@ -7,233 +7,152 @@ from dataclasses import dataclass
 from pprint import pprint
 
 
-# class SimpleType(enum.Enum):
-#     Char = "CHAR"
-#     Short = "SHORT"
-#     Int = "INT"
-#     Long = "LONG"
-#     Float = "FLOAT"
-#     Double = "DOUBLE"
-#     Signed = "SIGNED"
-#     Unsigned = "UNSIGNED"
-#
-#
-# @dataclass
-# class CommaOpt(enum.Enum):
-#     Comma = ","
-#     EmptyComma = ""
-#
-#
-# @dataclass
-# class IdentifierOpt(abc.ABC):
-#     pass
-#
-#
-# @dataclass
-# class Identifier(IdentifierOpt):
-#     ident: str
-#
-#
-# @dataclass
-# class IdentifierEpsilon(IdentifierOpt):
-#     pass
-#
-#
-# @dataclass
-# class ConstantExpression:
-#     constantExpression: int
-#
-#
-# @dataclass
-# class EnumeratorConstant:
-#     ident: str
-#
-#
-# @dataclass
-# class EnumeratorExpressionOpt(abc.ABC):
-#     pass
-#
-#
-# @dataclass
-# class ConstantExpression(EnumeratorExpressionOpt):
-#     pass
-#
-#
-# @dataclass
-# class EmptyExpression(EnumeratorExpressionOpt):
-#     pass
-#
-#
-# @dataclass
-# class Enumerator:
-#     enumeratorConstant: EnumeratorConstant
-#     enumeratorExpressionOpt: EnumeratorExpressionOpt
-#
-#
-# @dataclass
-# class EnumeratorList:
-#     enList: list[Enumerator]
-#
-#
+@dataclass
+class EnumeratorList:
+    body: str
+
+
 @dataclass
 class TypeSpecifier(abc.ABC):
     pass
-#
-#
-# @dataclass
-# class SimpleTypeSpecifier(TypeSpecifier):
-#     simpleType: SimpleType
 
 
 @dataclass
 class EnumStatement(abc.ABC):
     pass
-#
-#
-# @dataclass
-# class FullEnumStatement(EnumStatement):
-#     identOpt: IdentifierOpt
-#     enumList: EnumeratorList
-#     commaOpt: CommaOpt
-
-
-@dataclass
-class EmptyEnumStatement(EnumStatement):
-    ident: str
-
-
-@dataclass
-class EnumType:
-    enumStatement: EnumStatement
 
 
 @dataclass
 class EnumTypeSpecifier(TypeSpecifier):
-    enumType: EnumType
-#
-#
-# @dataclass
-# class AbstractDeclaratorOpt(abc.ABC):
-#     pass
-#
-#
-# @dataclass
-# class AbstractDeclarator(AbstractDeclaratorOpt):
-#     ident: str
-#
-#
-# @dataclass
-# class AbstractEpsilon(AbstractDeclaratorOpt):
-#     pass
+    enumStatement: EnumStatement
+
+
+@dataclass
+class FullEnumStatement(EnumStatement):
+    identifier: str
+    enumeratorList: EnumeratorList
+    endComma: bool
+
+
+@dataclass
+class EmptyEnumStatement(EnumStatement):
+    identifier: str
+
+
+class SimpleType(enum.Enum):
+    Char = "CHAR"
+    Short = "SHORT"
+    Int = "INT"
+    Long = "LONG"
+    Float = "FLOAT"
+    Double = "DOUBLE"
+    Signed = "SIGNED"
+    Unsigned = "UNSIGNED"
+
+
+@dataclass
+class SimpleTypeSpecifier(TypeSpecifier):
+    simpleType: SimpleType
 
 
 @dataclass
 class Declaration:
-    typeSpecifier: TypeSpecifier
-    # abstractDeclaratorOpt: AbstractDeclaratorOpt
+    declarationBody: TypeSpecifier
+    varName: str
 
 
 @dataclass
-class DeclarationList:
-    declarations: list[Declaration]
+class Program:
+    declarationList: list[Declaration]
 
 
-INTEGER = pe.Terminal('INTEGER', '[0-9]+', int, priority=7)
-IDENT = pe.Terminal('IDENT', '[A-Za-z][A-Za-z0-9]*', str.upper)
+NProgram = pe.NonTerminal('Program')
+
+NDeclarationList = pe.NonTerminal('DeclarationList')
+NDeclaration = pe.NonTerminal('Declaration')
+
+NAbstractDeclaratorOpt = pe.NonTerminal('AbstractDeclaratorOpt')
+NAbstractDeclarator = pe.NonTerminal('AbstractDeclarator')
+
+NTypeSpecifier = pe.NonTerminal('TypeSpecifier')
+
+NEnumTypeSpecifier = pe.NonTerminal('EnumTypeSpecifier')
+
+NSimpleTypeSpecifier = pe.NonTerminal('SimpleTypeSpecifier')
+NSimpleType = pe.NonTerminal('SimpleType')
+
+NEnumStatement = pe.NonTerminal('EnumStatement')
+
+NFullEnumStatement = pe.NonTerminal('FullEnumStatement')
+NEmptyEnumStatement = pe.NonTerminal('EmptyEnumStatement')
+
+NEnumeratorList = pe.NonTerminal('EnumeratorList')
+
+NIdentifierOpt = pe.NonTerminal('IdentifierOpt')
+
+NCommaOpt = pe.NonTerminal('CommaOpt')
 
 
-def make_keyword(t):
-    return pe.Terminal(t, t, lambda name: None, priority=10)
+def make_keyword(image):
+    return pe.Terminal(image, image, lambda _: None, priority=10)
 
 
-KW_ENUM = map(make_keyword, 'enum'.split())
+KW_ENUM = make_keyword('enum')
 
-# KW_CHAR, KW_SHORT, KW_INT, KW_LONG, KW_FLOAT, KW_DOUBLE, KW_SIGNED, KW_UNSIGNED = \
-#     map(make_keyword, 'char short int long float double signed unsigned'.split())
-#
-#
-NDeclarationList, NDeclaration, NTypeSpecifier, NAbstractDeclaratorOpt = \
-    map(pe.NonTerminal, 'DeclarationList Declaration TypeSpecifier AbstractDeclaratorOpt'.split())
+KW_CHAR, KW_SHORT, KW_INT, KW_LONG, KW_FLOAT, KW_DOUBLE, KW_SIGNED, KW_UNSIGNED = \
+    map(make_keyword, 'char short int long float double signed unsigned'.split())
 
-NAbstractDeclarator, NAbstractEpsilon, NSimpleTypeSpecifier, NSimpleType = \
-    map(pe.NonTerminal, 'AbstractDeclarator AbstractEpsilon SimpleTypeSpecifier SimpleType'.split())
-
-NEnumTypeSpecifier, NEnumType, NEnumStatement, NFullEnumStatement, NEmptyEnumStatement = \
-    map(pe.NonTerminal, 'EnumTypeSpecifier EnumType EnumStatement FullEnumStatement EmptyEnumStatement'.split())
-#
-# NIdentifierOpt, NIdentifier, NIdentifierEpsilon, NCommaOpt = \
-#     map(pe.NonTerminal, 'IdentifierOpt Identifier IdentifierEpsilon CommaOpt'.split())
-#
-# NEnumeratorList, NEnumerator, NEnumeratorConstant = \
-#     map(pe.NonTerminal, 'EnumeratorList Enumerator EnumeratorConstant'.split())
-#
-# NEnumeratorExpressionOpt, NConstantExpression, NEmptyExpression = \
-#     map(pe.NonTerminal, 'EnumeratorExpressionOpt ConstantExpression EmptyExpression'.split())
-#
-
-# TODO: делаю переходы
-
-NDeclarationList |= NDeclarationList, NDeclaration, lambda dlist, d: dlist + [d]
-NDeclarationList |= NDeclaration, lambda d: [d]
-
-# NDeclaration |= NTypeSpecifier, NAbstractDeclaratorOpt, ';'
-
-NDeclaration |= NTypeSpecifier, ';'
+KW_IDENTIFIER = pe.Terminal('IDENT', '[A-Za-z_][A-Za-z_0-9]*', str)
 
 
-# NTypeSpecifier |= NSimpleTypeSpecifier
-NTypeSpecifier |= NEnumTypeSpecifier
+NProgram |= NDeclarationList, Program
 
-# NSimpleTypeSpecifier |= NSimpleType
-#
-#
-# NAbstractDeclaratorOpt |= NAbstractDeclarator
-# NAbstractDeclaratorOpt |= NAbstractEpsilon
-#
-# NAbstractDeclarator |= IDENT
-#
+NDeclarationList |= lambda: []
+NDeclarationList |= NDeclarationList, NDeclaration, lambda dl, d: dl + [d]
 
-# NSimpleType |= KW_CHAR, lambda: SimpleType.Char
-# NSimpleType |= KW_SHORT, lambda: SimpleType.Short
-# NSimpleType |= KW_INT, lambda: SimpleType.Int
-# NSimpleType |= KW_LONG, lambda: SimpleType.Long
-# NSimpleType |= KW_FLOAT, lambda: SimpleType.Float
-# NSimpleType |= KW_DOUBLE, lambda: SimpleType.Double
-# NSimpleType |= KW_SIGNED, lambda: SimpleType.Signed
-# NSimpleType |= KW_UNSIGNED, lambda: SimpleType.Unsigned
+NDeclaration |= NTypeSpecifier, NAbstractDeclaratorOpt, ';', Declaration
 
-NEnumTypeSpecifier |= NEnumType
+NAbstractDeclaratorOpt |= lambda: ""
+NAbstractDeclaratorOpt |= NAbstractDeclarator
 
-# NEnumType |= KW_ENUM, NEnumStatement
+NAbstractDeclarator |= KW_IDENTIFIER
 
-# NEnumStatement |= NFullEnumStatement
-# NEnumStatement |= NEmptyEnumStatement
-#
-# NFullEnumStatement |= NIdentifierOpt, '{', NEnumeratorList, NCommaOpt, '}'
-#
-# NEmptyEnumStatement |= IDENT
-#
-# NCommaOpt |= ','
-# NCommaOpt |= ""  # мб это плохо
-#
-# NEnumeratorList |= EnumeratorList, ',', NEnumerator, lambda elist, e: elist + [e]
-# NEnumeratorList |= NEnumerator, lambda e: [e]
-#
-# NEnumerator |= NEnumeratorConstant, NEnumeratorExpressionOpt
-#
-# NEnumeratorConstant |= IDENT
-#
-# NIdentifierOpt |= IDENT
-# NIdentifierOpt |= NIdentifierEpsilon
-#
-# NEnumeratorExpressionOpt |= NConstantExpression
-# NEnumeratorExpressionOpt |= NEmptyExpression
-#
-# ConstantExpression |= INTEGER
+NTypeSpecifier |= NEnumTypeSpecifier, EnumTypeSpecifier
+NTypeSpecifier |= NSimpleTypeSpecifier, SimpleTypeSpecifier
+
+NSimpleTypeSpecifier |= NSimpleType
+
+NSimpleType |= KW_CHAR, lambda: SimpleType.Char
+NSimpleType |= KW_SHORT, lambda: SimpleType.Short
+NSimpleType |= KW_INT, lambda: SimpleType.Int
+NSimpleType |= KW_LONG, lambda: SimpleType.Long
+NSimpleType |= KW_FLOAT, lambda: SimpleType.Float
+NSimpleType |= KW_DOUBLE, lambda: SimpleType.Double
+NSimpleType |= KW_SIGNED, lambda: SimpleType.Signed
+NSimpleType |= KW_UNSIGNED, lambda: SimpleType.Unsigned
+
+
+NEnumTypeSpecifier |= KW_ENUM, NEnumStatement
+
+NEnumStatement |= NFullEnumStatement
+
+NFullEnumStatement |= NIdentifierOpt, '{', NEnumeratorList, NCommaOpt, '}', FullEnumStatement
+
+NIdentifierOpt |= lambda: ""
+NIdentifierOpt |= KW_IDENTIFIER
+
+NEnumStatement |= NEmptyEnumStatement, EmptyEnumStatement
+
+NEmptyEnumStatement |= KW_IDENTIFIER
+
+NEnumeratorList |= KW_IDENTIFIER
+
+NCommaOpt |= ',', lambda: False
+NCommaOpt |= lambda: True
 
 
 def main():
-    p = pe.Parser(NDeclarationList)
+    p = pe.Parser(NProgram)
 
     p.print_table()
 

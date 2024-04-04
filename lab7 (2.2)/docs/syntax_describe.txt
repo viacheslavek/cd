@@ -183,34 +183,8 @@ StructDeclaration -> TypeSpecifier ;
 
 // Пока сокращу грамматику до enum без арифметики, без сложных переменных и реализую ее:
 
-Program -> DeclarationList                                     // готово
-
-DeclarationList -> Declaration | DeclarationList Declaration   // готово
-
-Declaration -> TypeSpecifier AbstractDeclaratorOpt ;           // готово
-
-AbstractDeclaratorOpt -> AbstractDeclarator | ε                // готово
-
-// Пока упрощу переменные
-
-AbstractDeclarator -> IDENTIFIER                               // готово
-
-TypeSpecifier -> SimpleTypeSpecifier                           // готово
-                    | EnumTypeSpecifier
-
-SimpleTypeSpecifier -> SimpleType                                // готово ?
-
-SimpleType -> CHAR | SHORT | INT | LONG | FLOAT | DOUBLE | SIGNED | UNSIGNED     // готово ?
-
-EnumTypeSpecifier -> EnumType                                            // готово ?
-
-EnumType -> ENUM EnumStatement                                           // готово ?
-
-EnumStatement -> FullEnumStatement | EmptyEnumStatement             // готово ?
 
 FullEnumStatement -> IdentifierOpt { EnumeratorList CommaOpt }      // готово ?
-
-EmptyEnumStatement -> IDENTIFIER                                   // готово ?
 
 CommaOpt -> , | ε                                                   // готово ?
 
@@ -219,8 +193,6 @@ EnumeratorList -> Enumerator | EnumeratorList , Enumerator          // гото�
 Enumerator -> EnumeratorConstant EnumeratorExpressionOpt            // готово ?
 
 EnumeratorConstant -> IDENTIFIER                                     // готово ?
-
-IdentifierOpt -> IDENTIFIER | ε                                      // готово ?
 
 
 EnumeratorExpressionOpt -> = ConstantExpression | ε                  // готово ?
@@ -238,14 +210,6 @@ ConstantExpression -> INT                                   // готово ?
 
 
 
-NSimpleType |= KW_CHAR, lambda: SimpleType.Char
-NSimpleType |= KW_SHORT, lambda: SimpleType.Short
-NSimpleType |= KW_INT, lambda: SimpleType.Int
-NSimpleType |= KW_LONG, lambda: SimpleType.Long
-NSimpleType |= KW_FLOAT, lambda: SimpleType.Float
-NSimpleType |= KW_DOUBLE, lambda: SimpleType.Double
-NSimpleType |= KW_SIGNED, lambda: SimpleType.Signed
-NSimpleType |= KW_UNSIGNED, lambda: SimpleType.Unsigned
 
 
 
@@ -257,7 +221,8 @@ NSimpleType |= KW_UNSIGNED, lambda: SimpleType.Unsigned
 
 
 
-// Еще сильнее упрощаю грамматику
+
+// Строю новую грамматику с 0
 
 Program -> DeclarationList
 
@@ -275,13 +240,24 @@ AbstractDeclaratorOpt -> AbstractDeclarator | ε
 // TODO:  Потом это усложнится - добавится возможный указатель в начале и возможные скобки [...] в конце
 AbstractDeclarator -> IDENTIFIER
 
-// TODO: пока только int без присваивания, но потом это должно превратиться в SimpleTypeSpecifier -> SimpleType
-// Где SimpleType  -> в простые типы, а остальное у меня берется из AbstractDeclaratorOpt
-SimpleTypeSpecifier |= INT
 
-// TODO: доделать enum
-EnumTypeSpecifier |= EnumStatement
+SimpleTypeSpecifier -> SimpleType
 
-// пока пустой enum
-EnumStatement -> ENUM
+SimpleType -> CHAR | SHORT | INT | LONG | FLOAT | DOUBLE | SIGNED | UNSIGNED
 
+
+EnumTypeSpecifier -> ENUM EnumStatement
+
+EnumStatement -> FullEnumStatement | EmptyEnumStatement
+
+FullEnumStatement -> IdentifierOpt { EnumeratorList CommaOpt }
+
+IdentifierOpt -> IDENTIFIER | ε
+
+EmptyEnumStatement -> IDENTIFIER
+
+// TODO: потом сделать из этого список
+EnumeratorList -> IDENTIFIER
+
+
+CommaOpt -> , | ε
