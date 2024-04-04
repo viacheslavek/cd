@@ -42,6 +42,22 @@ class EnumeratorList:
 
 
 @dataclass
+class StructOrUnionStatement(abc.ABC):
+    pass
+
+
+@dataclass
+class EmptyStructOrUnionStatement(StructOrUnionStatement):
+    identifier: str
+
+
+@dataclass
+class StructOrUnionSpecifier(TypeSpecifier):
+    type: str
+    structOrUnionSpecifier: StructOrUnionStatement
+
+
+@dataclass
 class EnumStatement(abc.ABC):
     pass
 
@@ -108,7 +124,6 @@ class SimpleTypeSpecifier(TypeSpecifier):
     simpleType: SimpleType
 
 
-# TODO: тут переделать на declarationBody: TypeSpecifier, varName: AbstractDeclaratorsOpt
 @dataclass
 class SizeofExpression(Expression):
     declarationBody: TypeSpecifier
@@ -119,6 +134,12 @@ class SizeofExpression(Expression):
 class Declaration:
     declarationBody: TypeSpecifier
     varName: AbstractDeclaratorsOpt
+
+
+@dataclass
+class FullStructOrUnionStatement(StructOrUnionStatement):
+    identifierOpt: str
+    declarationList: list[Declaration]
 
 
 @dataclass
@@ -172,11 +193,23 @@ NFactor = pe.NonTerminal('Factor')
 NMultyOperation = pe.NonTerminal('MultyOperation')
 
 
+NStructOrUnionSpecifier = pe.NonTerminal('StructOrUnionSpecifier')
+
+NStructOrUnion = pe.NonTerminal('StructOrUnion')
+
+NStructOrUnionStatement = pe.NonTerminal('StructOrUnionStatement')
+
+NFullStructOrUnionStatement = pe.NonTerminal('FullStructOrUnionStatement')
+NEmptyStructOrUnionStatement = pe.NonTerminal('EmptyStructOrUnionStatement')
+
+
 def make_keyword(image):
     return pe.Terminal(image, image, lambda _: None, priority=10)
 
 
 KW_ENUM = make_keyword('enum')
+KW_STRUCT = make_keyword('struct')
+KW_UNION = make_keyword('union')
 
 KW_SIZEOF = make_keyword('sizeof')
 
@@ -215,10 +248,11 @@ NModifySimpleType |= IDENTIFIER
 NModifySimpleType |= NSimpleType, lambda st: str(st)
 
 
-NTypeSpecifier |= NEnumTypeSpecifier, EnumTypeSpecifier
-NTypeSpecifier |= NSimpleTypeSpecifier, SimpleTypeSpecifier
+NTypeSpecifier |= NEnumTypeSpecifier
+NTypeSpecifier |= NSimpleTypeSpecifier
+NTypeSpecifier |= NStructOrUnionSpecifier
 
-NSimpleTypeSpecifier |= NSimpleType
+NSimpleTypeSpecifier |= NSimpleType, SimpleTypeSpecifier
 
 NSimpleType |= KW_CHAR, lambda: SimpleType.Char
 NSimpleType |= KW_SHORT, lambda: SimpleType.Short
@@ -230,7 +264,7 @@ NSimpleType |= KW_SIGNED, lambda: SimpleType.Signed
 NSimpleType |= KW_UNSIGNED, lambda: SimpleType.Unsigned
 
 
-NEnumTypeSpecifier |= KW_ENUM, NEnumStatement
+NEnumTypeSpecifier |= KW_ENUM, NEnumStatement, EnumTypeSpecifier
 
 NEnumStatement |= NFullEnumStatement
 
@@ -270,7 +304,7 @@ NAddOperation |= '-', lambda: '-'
 NTerm |= NFactor
 NTerm |= NTerm, NMultyOperation, NFactor, BinaryOperationExpression
 
-NMultyOperation |= '*', lambda: '*'
+NMultyOperation |= '∙', lambda: '∙'
 NMultyOperation |= '/', lambda: '/'
 
 NFactor |= '(', NExpression, ')'
@@ -282,6 +316,20 @@ NFactor |= IDENTIFIER, IdentifierExpression
 NFactor |= KW_SIZEOF, '(', NTypeSpecifier, NAbstractDeclaratorsOpt, ')', SizeofExpression
 
 
+# тут может возникнуть проблема с конструктором
+NStructOrUnionSpecifier |= NStructOrUnion, NStructOrUnionStatement, StructOrUnionSpecifier
+
+NStructOrUnion |= KW_STRUCT, lambda: "struct"
+NStructOrUnion |= KW_UNION, lambda: "union"
+
+NStructOrUnionStatement |= NFullStructOrUnionStatement
+NStructOrUnionStatement |= NEmptyStructOrUnionStatement
+
+NEmptyStructOrUnionStatement |= IDENTIFIER, EmptyStructOrUnionStatement
+
+NFullStructOrUnionStatement |= NIdentifierOpt,  '{', NDeclarationList, '}', FullStructOrUnionStatement
+
+
 def main():
     p = pe.Parser(NProgram)
 
@@ -291,7 +339,7 @@ def main():
 
     p.add_skipped_domain('\\s')
 
-    files = ["tests/enum_prev.txt"]
+    files = ["tests/mixed.txt"]
 
     for filename in files:
         print("file:", filename)
