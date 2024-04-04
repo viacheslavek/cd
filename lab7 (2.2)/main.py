@@ -60,9 +60,15 @@ class SimpleType(enum.Enum):
 
 
 @dataclass
+class ListArraysOpt:
+    listArraysOpt: list[str]
+
+
+@dataclass
 class AbstractDeclarator:
     pointer: str
     declarator: str
+    arrayList: ListArraysOpt
 
 
 @dataclass
@@ -115,6 +121,9 @@ NConstantExpression = pe.NonTerminal('ConstantExpression')
 
 NIdentifierOpt = pe.NonTerminal('IdentifierOpt')
 
+NListArraysOpt = pe.NonTerminal('ListArraysOpt')
+NModifySimpleType = pe.NonTerminal('ModifySimpleType')
+
 NCommaOpt = pe.NonTerminal('CommaOpt')
 NPointerOpt = pe.NonTerminal('PointerOpt')
 
@@ -146,10 +155,17 @@ NAbstractDeclaratorsOpt |= NAbstractDeclarators
 NAbstractDeclarators |= NAbstractDeclarator, lambda a: [a]
 NAbstractDeclarators |= NAbstractDeclarators, ',', NAbstractDeclarator, lambda ads, a: ads + [a]
 
-NAbstractDeclarator |= NPointerOpt, KW_IDENTIFIER, AbstractDeclarator
+NAbstractDeclarator |= NPointerOpt, KW_IDENTIFIER, NListArraysOpt, AbstractDeclarator
 
 NPointerOpt |= KW_POINTER
 NPointerOpt |= lambda: ""
+
+
+NListArraysOpt |= lambda: []
+NListArraysOpt |= '[', NModifySimpleType, ']', NListArraysOpt, lambda mst, lao: lao + [mst]
+NModifySimpleType |= KW_IDENTIFIER
+NModifySimpleType |= NSimpleType, lambda st: str(st)
+
 
 NTypeSpecifier |= NEnumTypeSpecifier, EnumTypeSpecifier
 NTypeSpecifier |= NSimpleTypeSpecifier, SimpleTypeSpecifier
