@@ -208,8 +208,7 @@ ListArraysOpt -> [ ModifySimpleType ] ListArraysOpt | ε
 
 ModifySimpleType -> SimpleType | IDENTIFIER
 
-TypeSpecifier -> SimpleTypeSpecifier
-                    | EnumTypeSpecifier
+TypeSpecifier -> SimpleTypeSpecifier | EnumTypeSpecifier
 
 
 SimpleTypeSpecifier -> SimpleType
@@ -248,8 +247,6 @@ AddOperation -> + | -
 Term -> Factor | Term MultyOperation Factor
 MultyOperation -> * | /
 
-Factor -> IDENTIFIER | INT | ( Expression )
-
-// TODO: Добавляю в Factor sizeof
-
 Factor -> sizeof ( TypeSpecifier AbstractDeclaratorsOpt ) | IDENTIFIER | INT | ( Expression )
+
+// TODO: добавляю struct и union - должно быть легко, так как есть заготовки для этого

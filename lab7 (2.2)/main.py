@@ -108,6 +108,13 @@ class SimpleTypeSpecifier(TypeSpecifier):
     simpleType: SimpleType
 
 
+# TODO: тут переделать на declarationBody: TypeSpecifier, varName: AbstractDeclaratorsOpt
+@dataclass
+class SizeofExpression(Expression):
+    declarationBody: TypeSpecifier
+    varName: AbstractDeclaratorsOpt
+
+
 @dataclass
 class Declaration:
     declarationBody: TypeSpecifier
@@ -170,6 +177,8 @@ def make_keyword(image):
 
 
 KW_ENUM = make_keyword('enum')
+
+KW_SIZEOF = make_keyword('sizeof')
 
 KW_CHAR, KW_SHORT, KW_INT, KW_LONG, KW_FLOAT, KW_DOUBLE, KW_SIGNED, KW_UNSIGNED = \
     map(make_keyword, 'char short int long float double signed unsigned'.split())
@@ -270,8 +279,8 @@ NFactor |= INTEGER, IntExpression
 
 NFactor |= IDENTIFIER, IdentifierExpression
 
+NFactor |= KW_SIZEOF, '(', NTypeSpecifier, NAbstractDeclaratorsOpt, ')', SizeofExpression
 
-#  TODO: Добавить вычисление sizeof ( ??? )
 
 def main():
     p = pe.Parser(NProgram)
