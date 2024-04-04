@@ -176,42 +176,112 @@ StructDeclaration -> TypeSpecifier ;
 
 
 
+
+
+
+
+
 // Пока сокращу грамматику до enum без арифметики, без сложных переменных и реализую ее:
 
-DeclarationList -> DeclarationList Declaration | Declaration
+Program -> DeclarationList                                     // готово
 
-Declaration -> TypeSpecifier AbstractDeclaratorOpt ;
+DeclarationList -> Declaration | DeclarationList Declaration   // готово
 
-AbstractDeclaratorOpt -> AbstractDeclarator | ε
+Declaration -> TypeSpecifier AbstractDeclaratorOpt ;           // готово
+
+AbstractDeclaratorOpt -> AbstractDeclarator | ε                // готово
 
 // Пока упрощу переменные
 
-AbstractDeclarator -> IDENTIFIER
+AbstractDeclarator -> IDENTIFIER                               // готово
 
-TypeSpecifier -> SimpleType
-                    | EnumSpecifier
+TypeSpecifier -> SimpleTypeSpecifier                           // готово
+                    | EnumTypeSpecifier
 
-SimpleType -> CHAR | SHORT | INT | LONG | FLOAT | DOUBLE | SIGNED | UNSIGNED
+SimpleTypeSpecifier -> SimpleType                                // готово ?
+
+SimpleType -> CHAR | SHORT | INT | LONG | FLOAT | DOUBLE | SIGNED | UNSIGNED     // готово ?
+
+EnumTypeSpecifier -> EnumType                                            // готово ?
+
+EnumType -> ENUM EnumStatement                                           // готово ?
+
+EnumStatement -> FullEnumStatement | EmptyEnumStatement             // готово ?
+
+FullEnumStatement -> IdentifierOpt { EnumeratorList CommaOpt }      // готово ?
+
+EmptyEnumStatement -> IDENTIFIER                                   // готово ?
+
+CommaOpt -> , | ε                                                   // готово ?
+
+EnumeratorList -> Enumerator | EnumeratorList , Enumerator          // готово ?
+
+Enumerator -> EnumeratorConstant EnumeratorExpressionOpt            // готово ?
+
+EnumeratorConstant -> IDENTIFIER                                     // готово ?
+
+IdentifierOpt -> IDENTIFIER | ε                                      // готово ?
 
 
-EnumSpecifier -> ENUM EnumStatement
-
-EnumStatement -> IdentifierOpt { EnumeratorList CommaOpt } | Identifier
-
-CommaOpt -> , | ε
-
-EnumeratorList -> Enumerator | EnumeratorList , Enumerator
-
-Enumerator -> EnumeratorConstant EnumeratorExpressionOpt
-
-EnumeratorConstant -> Identifier
-
-IdentifierOpt -> Identifier | ε
-
-Identifier -> IDENTIFIER
-
-EnumeratorExpressionOpt -> = ConstantExpression | ε
+EnumeratorExpressionOpt -> = ConstantExpression | ε                  // готово ?
 
 // Пока упрощу выражения
 
-ConstantExpression -> INT_CONSTANT
+ConstantExpression -> INT                                   // готово ?
+
+
+
+
+
+
+
+
+
+
+NSimpleType |= KW_CHAR, lambda: SimpleType.Char
+NSimpleType |= KW_SHORT, lambda: SimpleType.Short
+NSimpleType |= KW_INT, lambda: SimpleType.Int
+NSimpleType |= KW_LONG, lambda: SimpleType.Long
+NSimpleType |= KW_FLOAT, lambda: SimpleType.Float
+NSimpleType |= KW_DOUBLE, lambda: SimpleType.Double
+NSimpleType |= KW_SIGNED, lambda: SimpleType.Signed
+NSimpleType |= KW_UNSIGNED, lambda: SimpleType.Unsigned
+
+
+
+
+
+
+
+
+
+
+
+// Еще сильнее упрощаю грамматику
+
+Program -> DeclarationList
+
+DeclarationList -> Declaration | DeclarationList Declaration
+
+// TODO: вместо AbstractDeclaratorOpt нужно AbstractDeclaratorsOpt, который раскрывается в список из AbstractDeclarator
+
+Declaration -> TypeSpecifier AbstractDeclaratorOpt ;
+
+TypeSpecifier -> SimpleTypeSpecifier
+                    | EnumTypeSpecifier
+
+AbstractDeclaratorOpt -> AbstractDeclarator | ε
+
+// TODO:  Потом это усложнится - добавится возможный указатель в начале и возможные скобки [...] в конце
+AbstractDeclarator -> IDENTIFIER
+
+// TODO: пока только int без присваивания, но потом это должно превратиться в SimpleTypeSpecifier -> SimpleType
+// Где SimpleType  -> в простые типы, а остальное у меня берется из AbstractDeclaratorOpt
+SimpleTypeSpecifier |= INT
+
+// TODO: доделать enum
+EnumTypeSpecifier |= EnumStatement
+
+// пока пустой enum
+EnumStatement -> ENUM
+
