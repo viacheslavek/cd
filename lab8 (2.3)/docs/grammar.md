@@ -17,7 +17,9 @@ E' ("+" T E') ()
 
 `REWRITING_RULE ::= NonTerminal REWRITING`
 
-`REWRITING ::= OpenBracket BODY CloseBracket REWRITING | epsilon`
+`REWRITING ::= OpenBracket BODY CloseBracket REWRITING_OPT`
+
+`REWRITING_OPT ::= OpenBracket BODY CloseBracket REWRITING_OPT`
 
 `BODY ::= Terminal BODY | NonTerminal BODY | epsilon`
 

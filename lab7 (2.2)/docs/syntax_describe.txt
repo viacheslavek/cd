@@ -101,17 +101,20 @@ AbstractDeclarators -> AbstractDeclarators , AbstractDeclarator | AbstractDeclar
 
 AbstractDeclaratorOpt -> AbstractDeclarator | ε
 
+AbstractDeclarator -> AbstractDeclaratorStar | AbstractDeclaratorArrayListOpt
+AbstractDeclaratorStar -> STAR AbstractDeclarator
 
-AbstractDeclarator -> NPointerOpt IDENTIFIER
 
+AbstractDeclaratorArrayListOpt -> AbstractDeclaratorArrayList | ε
+AbstractDeclaratorArrayList -> AbstractDeclaratorArrayListOpt AbstractDeclaratorArray
 
-AbstractDeclarator -> NPointerOpt IDENTIFIER ListArraysOpt
+AbstractDeclaratorArray -> AbstractDeclaratorArray [ Expression ] | AbstractDeclaratorPrim
 
-NPointerOpt -> POINTER
+AbstractDeclaratorPrim -> AbstractDeclaratorPrimSimple | AbstractDeclaratorPrimDifficult
 
-ListArraysOpt -> [ ModifySimpleType ] ListArraysOpt | ε
+AbstractDeclaratorPrimSimple -> IDENTIFIER
+AbstractDeclaratorPrimDifficult -> ( AbstractDeclarator )
 
-ModifySimpleType -> SimpleType | IDENTIFIER
 
 TypeSpecifier -> SimpleTypeSpecifier | EnumTypeSpecifier
 
@@ -164,3 +167,4 @@ StructOrUnionStatement -> FullStructOrUnionStatement | EmptyStructOrUnionStateme
 EmptyStructOrUnionStatement -> IDENTIFIER
 
 FullStructOrUnionStatement -> IdentifierOpt { DeclarationList }
+

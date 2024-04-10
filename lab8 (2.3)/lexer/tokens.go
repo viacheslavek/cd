@@ -2,8 +2,6 @@ package lexer
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 )
 
 type IToken interface {
@@ -111,45 +109,32 @@ func (it *IdentToken) SetAttr(attr int) {
 	it.attr = attr
 }
 
-func (it IdentToken) String() string {
+func (it *IdentToken) String() string {
 	return fmt.Sprintf("%s %s: %d", tagToString[it.Type], it.Coordinate, it.attr)
 }
 
-type StringToken struct {
+type TerminalToken struct {
 	Token
 	attr string
 }
 
-func NewString(value string, fragment Fragment) StringToken {
-	return StringToken{
-		Token: NewToken(StrTag, value, fragment),
+func NewTerminal(value string, fragment Fragment) TerminalToken {
+	return TerminalToken{
+		Token: NewToken(TermTag, value, fragment),
 	}
 }
 
-func (st *StringToken) SetText(text string) {
-	newText := processText(text)
-	st.attr = newText
-}
-
-func processText(text string) string {
-	newTexts := strings.Split(text, "#")
-	ans := ""
-	for _, nt := range newTexts {
-		if len(nt) == 0 {
-		} else if nt[0] == '\'' {
-			nt = strings.Replace(nt, "''", "'", -1)
-			ans += nt[1 : len(nt)-1]
-		} else {
-			num, err := strconv.Atoi(nt)
-			if err != nil {
-				fmt.Println("num problem")
-			}
-			ans += string(rune(num))
-		}
-	}
-	return ans
-}
-
-func (st StringToken) String() string {
+func (st *TerminalToken) String() string {
 	return fmt.Sprintf("%s %s: %s", tagToString[st.Type], st.Coordinate, st.attr)
+}
+
+type OperationToken struct {
+	Token
+	operation int
+}
+
+func NewOperation(value string, fragment Fragment) IdentToken {
+	return IdentToken{
+		Token: NewToken(OperationTag, value, fragment),
+	}
 }

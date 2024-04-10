@@ -74,12 +74,16 @@ func (p *RunePosition) IsQuote() bool {
 	return p.GetRune() == '"'
 }
 
-func (p *RunePosition) IsApostrophe() bool {
-	return p.GetRune() == '\''
+func (p *RunePosition) IsOpenBracket() bool {
+	return p.GetRune() == '('
 }
 
-func (p *RunePosition) IsHashtag() bool {
-	return p.GetRune() == '#'
+func (p *RunePosition) IsCloseBracket() bool {
+	return p.GetRune() == ')'
+}
+
+func (p *RunePosition) IsStarBracket() bool {
+	return p.GetRune() == '*'
 }
 
 func (p *RunePosition) IsLineTranslation() bool {

@@ -108,10 +108,23 @@ class ListArraysOpt:
 
 
 @dataclass
-class AbstractDeclarator:
-    pointer: str
+class AbstractDeclarator(abc.ABC):
+    pass
+
+
+@dataclass
+class AbstractDeclaratorPointer(AbstractDeclarator):
     declarator: str
-    arrayList: ListArraysOpt
+
+
+@dataclass
+class AbstractDeclaratorArrayList:
+    arrays: list[str]
+
+
+@dataclass
+class AbstractDeclaratorArray(AbstractDeclarator):
+    declarator: str
 
 
 @dataclass
@@ -137,6 +150,21 @@ class Declaration:
 
 
 @dataclass
+class AbstractDeclaratorPrim(abc.ABC):
+    pass
+
+
+@dataclass
+class AbstractDeclaratorPrimSimple(AbstractDeclaratorPrim):
+    identifier: str
+
+
+@dataclass
+class AbstractDeclaratorPrimDifficult(AbstractDeclaratorPrim):
+    identifier: AbstractDeclarator
+
+
+@dataclass
 class FullStructOrUnionStatement(StructOrUnionStatement):
     identifierOpt: str
     declarationList: list[Declaration]
@@ -155,6 +183,18 @@ NDeclaration = pe.NonTerminal('Declaration')
 NAbstractDeclaratorsOpt = pe.NonTerminal('AbstractDeclaratorsOpt')
 NAbstractDeclarators = pe.NonTerminal('AbstractDeclarators')
 NAbstractDeclarator = pe.NonTerminal('AbstractDeclarator')
+
+NAbstractDeclaratorStar = pe.NonTerminal('AbstractDeclaratorStar')
+NAbstractDeclaratorArrayListOpt = pe.NonTerminal('AbstractDeclaratorArrayListOpt')
+
+NAbstractDeclaratorArrayList = pe.NonTerminal('AbstractDeclaratorArrayList')
+
+NAbstractDeclaratorArray = pe.NonTerminal('AbstractDeclaratorArray')
+
+NAbstractDeclaratorPrim = pe.NonTerminal('AbstractDeclaratorPrim')
+
+NAbstractDeclaratorPrimSimple = pe.NonTerminal('AbstractDeclaratorPrimSimple')
+NAbstractDeclaratorPrimDifficult = pe.NonTerminal('AbstractDeclaratorPrimDifficult')
 
 NTypeSpecifier = pe.NonTerminal('TypeSpecifier')
 
@@ -176,11 +216,8 @@ NConstantExpression = pe.NonTerminal('ConstantExpression')
 
 NIdentifierOpt = pe.NonTerminal('IdentifierOpt')
 
-NListArraysOpt = pe.NonTerminal('ListArraysOpt')
-NModifySimpleType = pe.NonTerminal('ModifySimpleType')
 
 NCommaOpt = pe.NonTerminal('CommaOpt')
-NPointerOpt = pe.NonTerminal('PointerOpt')
 
 
 NExpression = pe.NonTerminal('Expression')
@@ -220,8 +257,7 @@ INTEGER = pe.Terminal('IDENTIFIER', r'[0-9]*', str)
 
 IDENTIFIER = pe.Terminal('IDENTIFIER', r'[A-Za-z_]([A-Za-z_0-9])*', str)
 
-KW_POINTER = pe.Terminal('POINTER', r'(\*)*', str)
-
+KW_STAR = pe.Terminal('STAR', r'\*', str)
 
 NProgram |= NDeclarationList, Program
 
@@ -236,16 +272,24 @@ NAbstractDeclaratorsOpt |= NAbstractDeclarators
 NAbstractDeclarators |= NAbstractDeclarator, lambda a: [a]
 NAbstractDeclarators |= NAbstractDeclarators, ',', NAbstractDeclarator, lambda ads, a: ads + [a]
 
-NAbstractDeclarator |= NPointerOpt, IDENTIFIER, NListArraysOpt, AbstractDeclarator
+NAbstractDeclarator |= NAbstractDeclaratorStar
+NAbstractDeclarator |= NAbstractDeclaratorArrayList, AbstractDeclaratorArrayList
 
-NPointerOpt |= KW_POINTER
-NPointerOpt |= lambda: ""
+NAbstractDeclaratorStar |= '*', NAbstractDeclarator, AbstractDeclaratorPointer
 
+NAbstractDeclaratorArrayList |= NAbstractDeclaratorArray, lambda a: [a]
+NAbstractDeclaratorArrayList |= NAbstractDeclaratorArrayList, NAbstractDeclaratorArray, lambda adalo, a: adalo + [a]
 
-NListArraysOpt |= lambda: []
-NListArraysOpt |= '[', NModifySimpleType, ']', NListArraysOpt, lambda mst, lao: lao + [mst]
-NModifySimpleType |= IDENTIFIER
-NModifySimpleType |= NSimpleType, lambda st: str(st)
+NAbstractDeclaratorArray |= '[', NExpression, ']', AbstractDeclaratorArray
+
+NAbstractDeclaratorArray |= NAbstractDeclaratorPrim
+NAbstractDeclaratorPrim |= NAbstractDeclaratorPrimSimple, AbstractDeclaratorPrimSimple
+
+NAbstractDeclaratorPrim |= NAbstractDeclaratorPrimDifficult, AbstractDeclaratorPrimDifficult
+
+NAbstractDeclaratorPrimSimple |= IDENTIFIER
+
+NAbstractDeclaratorPrimDifficult |= '(', NAbstractDeclarator, ')'
 
 
 NTypeSpecifier |= NEnumTypeSpecifier
@@ -304,7 +348,7 @@ NAddOperation |= '-', lambda: '-'
 NTerm |= NFactor
 NTerm |= NTerm, NMultyOperation, NFactor, BinaryOperationExpression
 
-NMultyOperation |= '∙', lambda: '∙'
+NMultyOperation |= '*', lambda: '*'
 NMultyOperation |= '/', lambda: '/'
 
 NFactor |= '(', NExpression, ')'
@@ -316,7 +360,6 @@ NFactor |= IDENTIFIER, IdentifierExpression
 NFactor |= KW_SIZEOF, '(', NTypeSpecifier, NAbstractDeclaratorsOpt, ')', SizeofExpression
 
 
-# тут может возникнуть проблема с конструктором
 NStructOrUnionSpecifier |= NStructOrUnion, NStructOrUnionStatement, StructOrUnionSpecifier
 
 NStructOrUnion |= KW_STRUCT, lambda: "struct"
@@ -332,8 +375,6 @@ NFullStructOrUnionStatement |= NIdentifierOpt,  '{', NDeclarationList, '}', Full
 
 def main():
     p = pe.Parser(NProgram)
-
-    p.print_table()
 
     assert p.is_lalr_one()
 

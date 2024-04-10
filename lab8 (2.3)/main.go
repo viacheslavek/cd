@@ -6,7 +6,7 @@ import (
 	"github.com/VyacheslavIsWorkingNow/cd/lab8/lexer"
 )
 
-const filepath = "test_files/mixed.txt"
+const filepath = "test_files/terminal.txt"
 
 func main() {
 
