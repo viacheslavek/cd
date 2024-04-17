@@ -63,25 +63,29 @@ func (t Token) GetType() DomainTag {
 }
 
 type Message struct {
-	isError bool
-	text    string
+	isComment bool
+	text      string
 }
 
-func NewMessage(isError bool, text string) Message {
+func NewMessage(isComment bool, text string) Message {
 	return Message{
-		isError: isError,
-		text:    text,
+		isComment: isComment,
+		text:      text,
 	}
 }
 
-type ErrorToken struct {
+type CommentToken struct {
 	Token
 }
 
-func NewError(text string, fragment Fragment) ErrorToken {
-	return ErrorToken{
-		Token: NewToken(ErrTag, text, fragment),
+func NewComment(text string, fragment Fragment) CommentToken {
+	return CommentToken{
+		Token: NewToken(CommentTag, text, fragment),
 	}
+}
+
+func (ct CommentToken) String() string {
+	return fmt.Sprintf("%s %s: %s", tagToString[ct.Type], ct.Coordinate, ct.Value)
 }
 
 type EOPToken struct {
@@ -94,28 +98,22 @@ func NewEOP() EOPToken {
 	}
 }
 
-type IdentToken struct {
+type NonTermToken struct {
 	Token
-	attr int
 }
 
-func NewIdent(value string, fragment Fragment) IdentToken {
-	return IdentToken{
-		Token: NewToken(IdentTag, value, fragment),
+func NewNonTerminal(value string, fragment Fragment) NonTermToken {
+	return NonTermToken{
+		Token: NewToken(NonTermTag, value, fragment),
 	}
 }
 
-func (it *IdentToken) SetAttr(attr int) {
-	it.attr = attr
-}
-
-func (it *IdentToken) String() string {
-	return fmt.Sprintf("%s %s: %d", tagToString[it.Type], it.Coordinate, it.attr)
+func (ntt NonTermToken) String() string {
+	return fmt.Sprintf("%s %s: %s", tagToString[ntt.Type], ntt.Coordinate, ntt.Value)
 }
 
 type TerminalToken struct {
 	Token
-	attr string
 }
 
 func NewTerminal(value string, fragment Fragment) TerminalToken {
@@ -124,17 +122,20 @@ func NewTerminal(value string, fragment Fragment) TerminalToken {
 	}
 }
 
-func (st *TerminalToken) String() string {
-	return fmt.Sprintf("%s %s: %s", tagToString[st.Type], st.Coordinate, st.attr)
+func (tt TerminalToken) String() string {
+	return fmt.Sprintf("%s %s: %s", tagToString[tt.Type], tt.Coordinate, tt.Value)
 }
 
 type OperationToken struct {
 	Token
-	operation int
 }
 
-func NewOperation(value string, fragment Fragment) IdentToken {
-	return IdentToken{
+func NewOperation(value string, fragment Fragment) OperationToken {
+	return OperationToken{
 		Token: NewToken(OperationTag, value, fragment),
 	}
+}
+
+func (st OperationToken) String() string {
+	return fmt.Sprintf("%s %s: %s", tagToString[st.Type], st.Coordinate, st.Value)
 }

@@ -6,22 +6,19 @@ import (
 )
 
 type Compiler struct {
-	tokens           []Token
-	messages         map[Fragment]Message
-	identifiersTable map[string]int
-	identifiers      []IdentToken
+	tokens   []Token
+	messages map[Fragment]Message
 }
 
 func NewCompiler() *Compiler {
 	return &Compiler{
-		messages:         make(map[Fragment]Message),
-		identifiersTable: make(map[string]int),
-		identifiers:      make([]IdentToken, 0),
+		messages: make(map[Fragment]Message),
 	}
 }
 
-func (c *Compiler) AddMessage(et ErrorToken) {
-	c.messages[et.Coordinate] = NewMessage(true, et.Value)
+func (c *Compiler) AddMessage(ct CommentToken) {
+	// TODO: в значении вписать комментарий без /* ... */
+	c.messages[ct.Coordinate] = NewMessage(true, ct.Value)
 }
 
 func (c *Compiler) PrintMessages() {
@@ -38,29 +35,7 @@ func (c *Compiler) PrintMessages() {
 	})
 	fmt.Println("_____MESSAGES_____")
 	for i, position := range sortedMessagesFragments {
-		fmt.Printf("Type: Error | i: %d | position: %v | text: %s\n",
+		fmt.Printf("Type: Comment | i: %d | position: %v | text: %s\n",
 			i, position, c.messages[position].text)
-	}
-}
-
-func (c *Compiler) GetIdentifier(identifier string) IdentToken {
-	return c.identifiers[c.identifiersTable[identifier]]
-}
-
-func (c *Compiler) AddIdentifier(identifier IdentToken) int {
-	val, ok := c.identifiersTable[identifier.Value]
-	if !ok {
-		iPosition := len(c.identifiers)
-		c.identifiers = append(c.identifiers, identifier)
-		c.identifiersTable[identifier.Value] = iPosition
-		return iPosition
-	}
-	return val
-}
-
-func (c *Compiler) PrintIdentifiers() {
-	fmt.Println("____Identifiers____")
-	for i, id := range c.identifiers {
-		fmt.Println(tagToString[id.Type], id.Coordinate, i, "--", id.Value)
 	}
 }

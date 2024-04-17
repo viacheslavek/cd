@@ -2,21 +2,18 @@ package lexer
 
 type DomainTag int
 
-// TODO: добавить комментарии
 const (
-	IdentTag DomainTag = iota + 1
-	NonTermTag
+	NonTermTag DomainTag = iota + 1
 	TermTag
 	OperationTag
-	ErrTag
+	CommentTag
 	EopTag
 )
 
 var tagToString = map[DomainTag]string{
-	IdentTag:     "IDENTIFIER",
 	NonTermTag:   "NON_TERMINAL",
 	TermTag:      "TERMINAL",
 	OperationTag: "OPERATION",
-	ErrTag:       "ERROR",
+	CommentTag:   "COMMENT",
 	EopTag:       "EOP",
 }

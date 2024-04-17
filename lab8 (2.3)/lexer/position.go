@@ -63,7 +63,7 @@ func (p *RunePosition) IsLetter() bool {
 
 func (p *RunePosition) IsLatinLetter() bool {
 	r := unicode.ToLower(p.GetRune())
-	return r >= 'a' && r <= 'z'
+	return r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z'
 }
 
 func (p *RunePosition) IsDigit() bool {
@@ -72,6 +72,9 @@ func (p *RunePosition) IsDigit() bool {
 
 func (p *RunePosition) IsQuote() bool {
 	return p.GetRune() == '"'
+}
+func (p *RunePosition) IsOneQuote() bool {
+	return p.GetRune() == '\''
 }
 
 func (p *RunePosition) IsOpenBracket() bool {
@@ -82,8 +85,16 @@ func (p *RunePosition) IsCloseBracket() bool {
 	return p.GetRune() == ')'
 }
 
-func (p *RunePosition) IsStarBracket() bool {
+func (p *RunePosition) IsStar() bool {
 	return p.GetRune() == '*'
+}
+
+func (p *RunePosition) IsBrackets() bool {
+	return p.IsOpenBracket() || p.IsCloseBracket()
+}
+
+func (p *RunePosition) IsOpenSlash() bool {
+	return p.GetRune() == '/'
 }
 
 func (p *RunePosition) IsLineTranslation() bool {
