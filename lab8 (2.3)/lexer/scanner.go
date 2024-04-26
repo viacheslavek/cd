@@ -21,17 +21,26 @@ func NewScanner(filepath string) *Scanner {
 	}
 }
 
+func (s *Scanner) PrintTokens() {
+	for _, p := range s.tokens {
+		fmt.Println(p)
+	}
+}
+
 func (s *Scanner) NextToken() IToken {
 	token := s.tokens[s.position]
+
 	if token.GetType() != EopTag {
 		s.position++
 	}
-	if token.GetType() == TermTag || token.GetType() == OperationTag || token.GetType() == NonTermTag {
+	if token.GetType() == TermTag || token.GetType() == NonTermTag ||
+		token.GetType() == CloseBracketTag || token.GetType() == OpenBracketTag || token.GetType() == AxiomTag {
 		return token
 	}
 	if token.GetType() == CommentTag {
 		newToken := token.(CommentToken)
 		s.compiler.AddMessage(newToken)
+		return s.NextToken()
 	}
 
 	return token
@@ -115,11 +124,11 @@ func processOperand(rs *RunePosition) IToken {
 	rs.NextRune()
 
 	if operand == '(' {
-		return NewOperation(string(operand), NewFragment(start, curPosition))
+		return NewOpenBracket(string(operand), NewFragment(start, curPosition))
 	} else if operand == ')' {
-		return NewOperation(string(operand), NewFragment(start, curPosition))
+		return NewCloseBracket(string(operand), NewFragment(start, curPosition))
 	} else if operand == '*' {
-		return NewOperation(string(operand), NewFragment(start, curPosition))
+		return NewAxiom(string(operand), NewFragment(start, curPosition))
 	}
 
 	log.Fatalf("the non real error %v", NewFragment(start, rs.GetCurrentPosition()))

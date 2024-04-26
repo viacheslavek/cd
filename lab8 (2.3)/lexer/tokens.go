@@ -6,6 +6,7 @@ import (
 
 type IToken interface {
 	GetType() DomainTag
+	GetValue() string
 }
 
 type Token struct {
@@ -55,11 +56,15 @@ func NewToken(tag DomainTag, value string, coordinate Fragment) Token {
 }
 
 func (t Token) String() string {
-	return fmt.Sprintf("%s %s: %s", tagToString[t.Type], t.Coordinate, t.Value)
+	return fmt.Sprintf("%s %s: %s", TagToString[t.Type], t.Coordinate, t.Value)
 }
 
 func (t Token) GetType() DomainTag {
 	return t.Type
+}
+
+func (t Token) GetValue() string {
+	return t.Value
 }
 
 type Message struct {
@@ -85,7 +90,7 @@ func NewComment(text string, fragment Fragment) CommentToken {
 }
 
 func (ct CommentToken) String() string {
-	return fmt.Sprintf("%s %s: %s", tagToString[ct.Type], ct.Coordinate, ct.Value)
+	return fmt.Sprintf("%s %s: %s", TagToString[ct.Type], ct.Coordinate, ct.Value)
 }
 
 type EOPToken struct {
@@ -109,7 +114,7 @@ func NewNonTerminal(value string, fragment Fragment) NonTermToken {
 }
 
 func (ntt NonTermToken) String() string {
-	return fmt.Sprintf("%s %s: %s", tagToString[ntt.Type], ntt.Coordinate, ntt.Value)
+	return fmt.Sprintf("%s %s: %s", TagToString[ntt.Type], ntt.Coordinate, ntt.Value)
 }
 
 type TerminalToken struct {
@@ -123,19 +128,47 @@ func NewTerminal(value string, fragment Fragment) TerminalToken {
 }
 
 func (tt TerminalToken) String() string {
-	return fmt.Sprintf("%s %s: %s", tagToString[tt.Type], tt.Coordinate, tt.Value)
+	return fmt.Sprintf("%s %s: %s", TagToString[tt.Type], tt.Coordinate, tt.Value)
 }
 
-type OperationToken struct {
+type OpenBracketToken struct {
 	Token
 }
 
-func NewOperation(value string, fragment Fragment) OperationToken {
-	return OperationToken{
-		Token: NewToken(OperationTag, value, fragment),
+func NewOpenBracket(value string, fragment Fragment) OpenBracketToken {
+	return OpenBracketToken{
+		Token: NewToken(OpenBracketTag, value, fragment),
 	}
 }
 
-func (st OperationToken) String() string {
-	return fmt.Sprintf("%s %s: %s", tagToString[st.Type], st.Coordinate, st.Value)
+func (st OpenBracketToken) String() string {
+	return fmt.Sprintf("%s %s: %s", TagToString[st.Type], st.Coordinate, st.Value)
+}
+
+type CloseBracketToken struct {
+	Token
+}
+
+func NewCloseBracket(value string, fragment Fragment) CloseBracketToken {
+	return CloseBracketToken{
+		Token: NewToken(CloseBracketTag, value, fragment),
+	}
+}
+
+func (st CloseBracketToken) String() string {
+	return fmt.Sprintf("%s %s: %s", TagToString[st.Type], st.Coordinate, st.Value)
+}
+
+type AxiomToken struct {
+	Token
+}
+
+func NewAxiom(value string, fragment Fragment) AxiomToken {
+	return AxiomToken{
+		Token: NewToken(AxiomTag, value, fragment),
+	}
+}
+
+func (st AxiomToken) String() string {
+	return fmt.Sprintf("%s %s: %s", TagToString[st.Type], st.Coordinate, st.Value)
 }

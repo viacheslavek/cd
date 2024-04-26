@@ -11,15 +11,13 @@ E' ("+" T E') ()
 
 # Реализация
 
-`DECLARATION ::= IS_AXIOM REWRITING_RULE DECLARATION | epsilon `
+`DECLARATIONS ::= REWRITING_RULE DECLARATIONS | epsilon `
 
-`IS_AXIOM ::= AxiomSign | epsilon`
-
-`REWRITING_RULE ::= NonTerminal REWRITING`
+`REWRITING_RULE ::= AxiomSign NonTerminal REWRITING | NonTerminal REWRITING`
 
 `REWRITING ::= OpenBracket BODY CloseBracket REWRITING_OPT`
 
-`REWRITING_OPT ::= OpenBracket BODY CloseBracket REWRITING_OPT`
+`REWRITING_OPT ::= OpenBracket BODY CloseBracket REWRITING_OPT | epsilon`
 
 `BODY ::= Terminal BODY | NonTerminal BODY | epsilon`
 
