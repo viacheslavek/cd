@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/VyacheslavIsWorkingNow/cd/lab8/lexer"
 	"github.com/VyacheslavIsWorkingNow/cd/lab8/top_down_parse"
-	"log"
 )
 
 const filepath = "test_files/mixed.txt"
@@ -20,7 +21,7 @@ func main() {
 		log.Panic("пупу:", err)
 	}
 
-	tree.PrintNode()
+	tree.Print()
 
 	scanner.GetCompiler().PrintMessages()
 

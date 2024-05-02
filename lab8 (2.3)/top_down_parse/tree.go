@@ -7,10 +7,6 @@ import (
 	"github.com/VyacheslavIsWorkingNow/cd/lab8/lexer"
 )
 
-type treeNodePrinter interface {
-	printNode(offset int)
-}
-
 type TreeNode struct {
 	root *innerTreeNode
 }
@@ -19,12 +15,16 @@ func newTreeNode() *TreeNode {
 	return &TreeNode{}
 }
 
+func (tn *TreeNode) Print() {
+	tn.root.printNode(0)
+}
+
 func (tn *TreeNode) addNode(node *innerTreeNode) {
 	tn.root = node
 }
 
-func (tn *TreeNode) PrintNode() {
-	tn.root.printNode(0)
+type treeNodePrinter interface {
+	printNode(offset int)
 }
 
 type innerTreeNode struct {
