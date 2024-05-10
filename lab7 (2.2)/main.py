@@ -185,7 +185,6 @@ NAbstractDeclarators = pe.NonTerminal('AbstractDeclarators')
 NAbstractDeclarator = pe.NonTerminal('AbstractDeclarator')
 
 NAbstractDeclaratorStar = pe.NonTerminal('AbstractDeclaratorStar')
-NAbstractDeclaratorArrayListOpt = pe.NonTerminal('AbstractDeclaratorArrayListOpt')
 
 NAbstractDeclaratorArrayList = pe.NonTerminal('AbstractDeclaratorArrayList')
 
@@ -257,8 +256,6 @@ INTEGER = pe.Terminal('IDENTIFIER', r'[0-9]*', str)
 
 IDENTIFIER = pe.Terminal('IDENTIFIER', r'[A-Za-z_]([A-Za-z_0-9])*', str)
 
-KW_STAR = pe.Terminal('STAR', r'\*', str)
-
 NProgram |= NDeclarationList, Program
 
 NDeclarationList |= lambda: []
@@ -278,7 +275,8 @@ NAbstractDeclarator |= NAbstractDeclaratorArrayList, AbstractDeclaratorArrayList
 NAbstractDeclaratorStar |= '*', NAbstractDeclarator, AbstractDeclaratorPointer
 
 NAbstractDeclaratorArrayList |= NAbstractDeclaratorArray, lambda a: [a]
-NAbstractDeclaratorArrayList |= NAbstractDeclaratorArrayList, NAbstractDeclaratorArray, lambda adalo, a: adalo + [a]
+NAbstractDeclaratorArrayList |= (NAbstractDeclaratorArrayList, NAbstractDeclaratorArray,
+                                 lambda adalo, a: adalo + [a])
 
 NAbstractDeclaratorArray |= '[', NExpression, ']', AbstractDeclaratorArray
 

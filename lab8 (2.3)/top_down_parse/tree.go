@@ -37,7 +37,7 @@ func newInnerTreeNode(nonTerminal string) *innerTreeNode {
 }
 
 func (itn innerTreeNode) printNode(offset int) {
-	fmt.Printf(strings.Repeat("\t", offset) + fmt.Sprintf("Inner node: %s\n", itn.nonTerminal))
+	fmt.Printf(strings.Repeat(" ", offset) + fmt.Sprintf("Inner node: %s\n", itn.nonTerminal))
 
 	for _, child := range itn.children {
 		child.printNode(offset + 1)
@@ -54,10 +54,10 @@ func newLeafTreeNode(token lexer.IToken) *leafTreeNode {
 
 func (ltn *leafTreeNode) printNode(offset int) {
 	if ltn.token.GetType() == lexer.TermTag || ltn.token.GetType() == lexer.NonTermTag {
-		fmt.Printf(strings.Repeat("\t", offset) +
+		fmt.Printf(strings.Repeat(" ", offset) +
 			fmt.Sprintf("Leaf: %s - %s\n", lexer.TagToString[ltn.token.GetType()], ltn.token.GetValue()))
 	} else {
-		fmt.Printf(strings.Repeat("\t", offset) +
+		fmt.Printf(strings.Repeat(" ", offset) +
 			fmt.Sprintf("Leaf: %s\n", lexer.TagToString[ltn.token.GetType()]))
 	}
 }

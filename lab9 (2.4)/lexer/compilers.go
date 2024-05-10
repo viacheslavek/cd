@@ -17,6 +17,7 @@ func NewCompiler() *Compiler {
 }
 
 func (c *Compiler) AddMessage(ct CommentToken) {
+	// TODO: в значении вписать комментарий без /* ... */
 	c.messages[ct.Coordinate] = NewMessage(true, ct.Value)
 }
 

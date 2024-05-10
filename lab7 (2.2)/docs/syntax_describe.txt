@@ -20,25 +20,28 @@ DeclarationList -> Declaration*
 Declaration -> TypeSpecifier AbstractDeclaratorsOpt ;
 
 
-AbstractDeclaratorsOpt -> AbstractDeclarators | ε
+AbstractDeclaratorsOpt -> (AbstractDeclarators)?
 
-AbstractDeclarators -> AbstractDeclarator*
+AbstractDeclarators -> AbstractDeclarator (, AbstractDeclarator)*
 
-AbstractDeclaratorOpt -> AbstractDeclarator | ε
-
-
-AbstractDeclarator -> NPointerOpt IDENTIFIER
+AbstractDeclaratorOpt -> (AbstractDeclarator)?
 
 
-AbstractDeclarator -> NPointerOpt IDENTIFIER ListArraysOpt
+AbstractDeclarator -> AbstractDeclaratorStar | AbstractDeclaratorArrayListOpt
+AbstractDeclaratorStar -> STAR AbstractDeclarator
 
-NPointerOpt -> POINTER
+AbstractDeclaratorArrayListOpt -> (AbstractDeclaratorArrayList)?
+AbstractDeclaratorArrayList -> AbstractDeclaratorArrayListOpt AbstractDeclaratorArray
 
-ListArraysOpt -> [ ModifySimpleType ]*
+AbstractDeclaratorArray -> AbstractDeclaratorArray [ Expression ] | AbstractDeclaratorPrim
 
-ModifySimpleType -> SimpleType | IDENTIFIER
+AbstractDeclaratorPrim -> AbstractDeclaratorPrimSimple | AbstractDeclaratorPrimDifficult
 
-TypeSpecifier -> SimpleTypeSpecifier | EnumTypeSpecifier | StructOrUnionSpecifier
+AbstractDeclaratorPrimSimple -> IDENTIFIER
+AbstractDeclaratorPrimDifficult -> ( AbstractDeclarator )
+
+
+TypeSpecifier -> SimpleTypeSpecifier | EnumTypeSpecifier
 
 
 SimpleTypeSpecifier -> SimpleType
@@ -52,24 +55,24 @@ EnumStatement -> FullEnumStatement | EmptyEnumStatement
 
 FullEnumStatement -> IdentifierOpt { EnumeratorList CommaOpt }
 
-IdentifierOpt -> IDENTIFIER | ε
+IdentifierOpt -> (IDENTIFIER)?
 
 EmptyEnumStatement -> IDENTIFIER
 
-EnumeratorList -> EnumeratorList*
+EnumeratorList -> Enumerator (, Enumerator)*
 
 Enumerator -> IDENTIFIER EnumeratorExpressionOpt
 
-EnumeratorExpressionOpt -> = ConstantExpression | ε
+EnumeratorExpressionOpt -> (= ConstantExpression)?
 
 
-CommaOpt -> , | ε
+CommaOpt -> (,)?
 
 
 ConstantExpression -> Expression
 
 Expression -> IDENTIFIER | INT | Expression BinOp Expression | UnOp Expression
-BinaryOperation -> + | - | ∙ | /
+BinaryOperation -> + | - | * | /
 UnaryOperation -> + | - | sizeof ( TypeSpecifier AbstractDeclaratorsOpt )
 
 
