@@ -9,7 +9,7 @@ import (
 	"github.com/VyacheslavIsWorkingNow/cd/lab10/converter/top_down_parse"
 )
 
-const filepath = "test_files/mixed.txt"
+const filepath = "test_files/basic.txt"
 
 func main() {
 
@@ -28,10 +28,12 @@ func main() {
 
 	sem := semantic.NewSemantic(tree)
 
-	errSem := sem.StartSemanticAnalysis()
+	errSem, rules := sem.StartSemanticAnalysis()
 	if errSem != nil {
 		fmt.Println("err in sem", errSem)
 	}
+
+	rules.Print()
 
 	fmt.Println("finish")
 }

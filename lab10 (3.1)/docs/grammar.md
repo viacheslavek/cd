@@ -27,7 +27,7 @@ OpenBracket ::= (
 CloseBracket ::= )
 Whitespace ::= [ \t\n\r]+
 Comment ::= /*([^(*/)]*)*/
-NonTerminal ::= [a-zA-Z][a-zA-Z0-9]*(')?
+NonTerminal ::= [a-zA-Z][a-zA-Z0-9_]*(')?
 Terminal    ::= "[^"]+"
 ```
 

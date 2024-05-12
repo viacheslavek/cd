@@ -147,7 +147,7 @@ func processNonTerminal(rs *RunePosition) IToken {
 		if rs.GetRune() == -1 {
 			return Token{}
 		}
-		if (rs.IsLetter() && rs.IsLatinLetter()) || rs.IsDigit() {
+		if (rs.IsLetter() && rs.IsLatinLetter()) || rs.IsDigit() || rs.IsLowLine() {
 			currentNonTerminal = append(currentNonTerminal, rs.GetRune())
 		} else if rs.IsOneQuote() {
 			currentNonTerminal = append(currentNonTerminal, rs.GetRune())

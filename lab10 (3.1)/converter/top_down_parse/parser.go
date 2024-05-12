@@ -25,7 +25,7 @@ func (p Parser) TopDownParse(scanner *lexer.Scanner) (*TreeNode, error) {
 
 	root := newTreeNode()
 	root.addNode(newInnerTreeNode(""))
-	s.Push(stackNode{itn: root.Root, val: declarations})
+	s.Push(stackNode{itn: root.Root, val: Declarations})
 
 	t := scanner.NextToken()
 

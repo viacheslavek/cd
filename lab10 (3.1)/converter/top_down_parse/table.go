@@ -6,16 +6,16 @@ import (
 )
 
 const (
-	declarations  = "DECLARATIONS"
-	rewritingRule = "REWRITING_RULE"
-	rewriting     = "REWRITING"
-	rewritingOpt  = "REWRITING_OPT"
-	body          = "BODY"
+	Declarations  = "DECLARATIONS"
+	RewritingRule = "REWRITING_RULE"
+	Rewriting     = "REWRITING"
+	RewritingOpt  = "REWRITING_OPT"
+	Body          = "BODY"
 	nonTerminal   = "NonTerminal"
 	terminal      = "Terminal"
 	axiomSign     = "AxiomSign"
-	openBracket   = "OpenBracket"
-	closeBracket  = "CloseBracket"
+	OpenBracket   = "OpenBracket"
+	CloseBracket  = "CloseBracket"
 	eof           = "Eof"
 )
 
@@ -24,7 +24,7 @@ func newTableKey(nonTerminal, terminal string) string {
 }
 
 func terminalValue() []string {
-	return []string{declarations, rewritingRule, rewriting, rewritingOpt, body}
+	return []string{Declarations, RewritingRule, Rewriting, RewritingOpt, Body}
 }
 
 func isTerminal(s string) bool {
@@ -33,22 +33,22 @@ func isTerminal(s string) bool {
 
 func newTable() map[string][]string {
 	return map[string][]string{
-		newTableKey(declarations, axiomSign):   {rewritingRule, declarations},
-		newTableKey(declarations, nonTerminal): {rewritingRule, declarations},
-		newTableKey(declarations, eof):         {},
+		newTableKey(Declarations, axiomSign):   {RewritingRule, Declarations},
+		newTableKey(Declarations, nonTerminal): {RewritingRule, Declarations},
+		newTableKey(Declarations, eof):         {},
 
-		newTableKey(rewritingRule, axiomSign):   {axiomSign, nonTerminal, rewriting},
-		newTableKey(rewritingRule, nonTerminal): {nonTerminal, rewriting},
+		newTableKey(RewritingRule, axiomSign):   {axiomSign, nonTerminal, Rewriting},
+		newTableKey(RewritingRule, nonTerminal): {nonTerminal, Rewriting},
 
-		newTableKey(rewriting, openBracket): {openBracket, body, closeBracket, rewritingOpt},
+		newTableKey(Rewriting, OpenBracket): {OpenBracket, Body, CloseBracket, RewritingOpt},
 
-		newTableKey(rewritingOpt, axiomSign):   {},
-		newTableKey(rewritingOpt, nonTerminal): {},
-		newTableKey(rewritingOpt, openBracket): {openBracket, body, closeBracket, rewritingOpt},
-		newTableKey(rewritingOpt, eof):         {},
+		newTableKey(RewritingOpt, axiomSign):   {},
+		newTableKey(RewritingOpt, nonTerminal): {},
+		newTableKey(RewritingOpt, OpenBracket): {OpenBracket, Body, CloseBracket, RewritingOpt},
+		newTableKey(RewritingOpt, eof):         {},
 
-		newTableKey(body, nonTerminal):  {nonTerminal, body},
-		newTableKey(body, terminal):     {terminal, body},
-		newTableKey(body, closeBracket): {},
+		newTableKey(Body, nonTerminal):  {nonTerminal, Body},
+		newTableKey(Body, terminal):     {terminal, Body},
+		newTableKey(Body, CloseBracket): {},
 	}
 }

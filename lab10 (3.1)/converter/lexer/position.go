@@ -70,6 +70,10 @@ func (p *RunePosition) IsDigit() bool {
 	return unicode.IsDigit(p.GetRune())
 }
 
+func (p *RunePosition) IsLowLine() bool {
+	return p.GetRune() == '_'
+}
+
 func (p *RunePosition) IsQuote() bool {
 	return p.GetRune() == '"'
 }
