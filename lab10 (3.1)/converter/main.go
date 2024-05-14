@@ -10,7 +10,11 @@ import (
 	"github.com/VyacheslavIsWorkingNow/cd/lab10/converter/top_down_parse"
 )
 
-const filepath = "test_files/basic.txt"
+const filepath = "test_files/grammarForGrammar.txt"
+
+const (
+	tablePath = "top_down_parse/gen_table.go"
+)
 
 func main() {
 
@@ -43,7 +47,10 @@ func main() {
 
 	predtable.PrintGenTable(genTable)
 
-	// TODO: сохранять эту структуру в gen_table.go
+	errUF := predtable.UploadTableToFile(tablePath, genTable, rules)
+	if errUF != nil {
+		log.Fatalf("err in upload table: %+v", errUF)
+	}
 
 	fmt.Println("finish")
 }
