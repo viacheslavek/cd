@@ -8,17 +8,24 @@ import (
 )
 
 type Scanner struct {
-	tokens   []IToken
-	compiler *Compiler
-	position int
+	tokens    []IToken
+	compiler  *Compiler
+	position  int
+	terminals map[string]struct{}
 }
 
 func NewScanner(filepath string) *Scanner {
+	tokens, terminals := ParseFile(filepath)
 	return &Scanner{
-		tokens:   ParseFile(filepath),
-		compiler: NewCompiler(),
-		position: 0,
+		tokens:    tokens,
+		compiler:  NewCompiler(),
+		position:  0,
+		terminals: terminals,
 	}
+}
+
+func (s *Scanner) GetTerminals() map[string]struct{} {
+	return s.terminals
 }
 
 func (s *Scanner) PrintTokens() {
@@ -50,7 +57,7 @@ func (s *Scanner) GetCompiler() *Compiler {
 	return s.compiler
 }
 
-func ParseFile(filepath string) []IToken {
+func ParseFile(filepath string) ([]IToken, map[string]struct{}) {
 	file, errO := os.Open(filepath)
 	if errO != nil {
 		log.Fatalf("can't open file in parser %e", errO)
@@ -60,6 +67,7 @@ func ParseFile(filepath string) []IToken {
 	}()
 
 	tokens := make([]IToken, 0)
+	terminals := make(map[string]struct{})
 
 	scanner := bufio.NewScanner(file)
 	runeScanner := NewRunePosition(scanner)
@@ -70,7 +78,7 @@ func ParseFile(filepath string) []IToken {
 		}
 
 		if runeScanner.IsQuote() {
-			tokens = append(tokens, processTerminal(runeScanner))
+			tokens = append(tokens, processTerminal(runeScanner, &terminals))
 		} else if runeScanner.IsOpenBracket() || runeScanner.IsCloseBracket() || runeScanner.IsStar() {
 			tokens = append(tokens, processOperand(runeScanner))
 		} else if runeScanner.IsLetter() && runeScanner.IsLatinLetter() {
@@ -94,10 +102,10 @@ func ParseFile(filepath string) []IToken {
 
 	tokens = append(tokens, NewEOP())
 
-	return tokens
+	return tokens, terminals
 }
 
-func processTerminal(rs *RunePosition) IToken {
+func processTerminal(rs *RunePosition, terminals *map[string]struct{}) IToken {
 	currentString := make([]rune, 0)
 	currentString = append(currentString, rs.GetRune())
 	start := rs.GetCurrentPosition()
@@ -115,7 +123,10 @@ func processTerminal(rs *RunePosition) IToken {
 	curPosition := rs.GetCurrentPosition()
 	rs.NextRune()
 
-	return NewTerminal(string(currentString), NewFragment(start, curPosition))
+	term := string(currentString[1 : len(currentString)-1])
+	(*terminals)[term] = struct{}{}
+
+	return NewTerminal(term, NewFragment(start, curPosition))
 }
 
 func processOperand(rs *RunePosition) IToken {

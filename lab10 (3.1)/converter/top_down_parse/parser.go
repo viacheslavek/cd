@@ -8,11 +8,13 @@ import (
 
 type Parser struct {
 	table map[string][]string
+	axiom string
 }
 
 func NewParser() Parser {
 	return Parser{
-		table: newTable(),
+		table: newGenTable(),
+		axiom: newGenAxiom(),
 	}
 }
 
@@ -25,7 +27,8 @@ func (p Parser) TopDownParse(scanner *lexer.Scanner) (*TreeNode, error) {
 
 	root := newTreeNode()
 	root.addNode(newInnerTreeNode(""))
-	s.Push(stackNode{itn: root.Root, val: Declarations})
+
+	s.Push(stackNode{itn: root.Root, val: p.axiom})
 
 	t := scanner.NextToken()
 
@@ -35,7 +38,7 @@ func (p Parser) TopDownParse(scanner *lexer.Scanner) (*TreeNode, error) {
 			return newTreeNode(), fmt.Errorf("failed to get top node: %w", err)
 		}
 
-		if isTerminal(topNode.val) {
+		if isTerminal(topNode.val, scanner.GetTerminals()) {
 			topNode.itn.Children = append(topNode.itn.Children, newLeafTreeNode(t))
 			t = scanner.NextToken()
 		} else if neighbourhoods, ok := p.table[newTableKey(topNode.val, lexer.TagToString[t.GetType()])]; ok {

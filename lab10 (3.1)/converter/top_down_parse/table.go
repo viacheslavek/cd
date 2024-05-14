@@ -2,7 +2,6 @@ package top_down_parse
 
 import (
 	"fmt"
-	"slices"
 )
 
 const (
@@ -23,12 +22,9 @@ func newTableKey(nonTerminal, terminal string) string {
 	return fmt.Sprintf("%s - %s", nonTerminal, terminal)
 }
 
-func terminalValue() []string {
-	return []string{Declarations, RewritingRule, Rewriting, RewritingOpt, Body}
-}
-
-func isTerminal(s string) bool {
-	return !slices.Contains(terminalValue(), s)
+func isTerminal(s string, terminals map[string]struct{}) bool {
+	_, ok := terminals[s]
+	return ok
 }
 
 func newTable() map[string][]string {

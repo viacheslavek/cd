@@ -9,7 +9,7 @@ import (
 )
 
 type Rules struct {
-	Rules       []Rule
+	Rule        []Rule
 	Axiom       string
 	Terminal    map[string]struct{}
 	NonTerminal map[string]struct{}
@@ -30,20 +30,20 @@ func NewSemantic(tree *top_down_parse.TreeNode) *Semantic {
 	}
 }
 
-func (s *Semantic) StartSemanticAnalysis() (error, Rules) {
+func (s *Semantic) StartSemanticAnalysis() (Rules, error) {
 	log.Println("start semantic analysis")
 
 	allNonTerminalSymbol, terminalSymbol, ac := getTerminalAndNonTerminal(*s.Tree)
 
 	if ac == 0 {
-		return fmt.Errorf("zero axiom, need one"), Rules{}
+		return Rules{}, fmt.Errorf("zero axiom, need one")
 	}
 	if ac > 1 {
-		return fmt.Errorf("axiom isn`t be better than 1, give: %d", ac), Rules{}
+		return Rules{}, fmt.Errorf("axiom isn`t be better than 1, give: %d", ac)
 	}
 
 	rules := Rules{
-		Rules:       make([]Rule, 0),
+		Rule:        make([]Rule, 0),
 		Axiom:       "",
 		NonTerminal: allNonTerminalSymbol,
 		Terminal:    terminalSymbol,
@@ -54,11 +54,13 @@ func (s *Semantic) StartSemanticAnalysis() (error, Rules) {
 	convertTreeToRewritingsRules(*s.Tree, &rules, &leftNonTerminals)
 
 	if !isFirstSetInSecond(allNonTerminalSymbol, leftNonTerminals) {
-		return fmt.Errorf("there are unreachable nonterminals %+v, %+v",
-			leftNonTerminals, allNonTerminalSymbol), Rules{}
+		return Rules{}, fmt.Errorf("there are unreachable nonterminals %+v, %+v",
+			leftNonTerminals, allNonTerminalSymbol)
 	}
 
-	return nil, rules
+	convertEmptiness(&rules.Rule)
+
+	return rules, nil
 }
 
 func getTerminalAndNonTerminal(tree top_down_parse.TreeNode) (
@@ -407,7 +409,7 @@ func handleBody(node *top_down_parse.InnerTreeNode, currentBody *[]string) {
 }
 
 func (r *Rules) putRule(leftNonTerminal string, body []string) {
-	r.Rules = append(r.Rules, Rule{LeftSymbol: leftNonTerminal, RightSymbols: body})
+	r.Rule = append(r.Rule, Rule{LeftSymbol: leftNonTerminal, RightSymbols: body})
 }
 
 func (r *Rules) Print() {
@@ -416,8 +418,8 @@ func (r *Rules) Print() {
 	fmt.Println("NonTerminal:", r.NonTerminal)
 	fmt.Println("Axiom:", r.Axiom)
 	fmt.Println("Rewriting Rules:")
-	for _, rule := range r.Rules {
-		fmt.Println(rule.LeftSymbol, "->", rule.RightSymbols)
+	for _, rule := range r.Rule {
+		fmt.Printf("%s -> %q\n", rule.LeftSymbol, rule.RightSymbols)
 	}
 }
 
@@ -428,4 +430,12 @@ func isFirstSetInSecond(first, second map[string]struct{}) bool {
 		}
 	}
 	return true
+}
+
+func convertEmptiness(rules *[]Rule) {
+	for i := 0; i < len(*rules); i++ {
+		if len((*rules)[i].RightSymbols) == 0 {
+			(*rules)[i].RightSymbols = append((*rules)[i].RightSymbols, "")
+		}
+	}
 }

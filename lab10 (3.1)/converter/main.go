@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/VyacheslavIsWorkingNow/cd/lab10/converter/semantic"
 	"log"
 
 	"github.com/VyacheslavIsWorkingNow/cd/lab10/converter/lexer"
+	"github.com/VyacheslavIsWorkingNow/cd/lab10/converter/predtable"
+	"github.com/VyacheslavIsWorkingNow/cd/lab10/converter/semantic"
 	"github.com/VyacheslavIsWorkingNow/cd/lab10/converter/top_down_parse"
 )
 
-const filepath = "test_files/basic.txt"
+const filepath = "test_files/grammarForGrammar.txt"
 
 func main() {
 
@@ -17,9 +18,9 @@ func main() {
 
 	parser := top_down_parse.NewParser()
 
-	tree, err := parser.TopDownParse(scanner)
-	if err != nil {
-		log.Panic("пупу:", err)
+	tree, errTDP := parser.TopDownParse(scanner)
+	if errTDP != nil {
+		log.Fatalf("err in TopDownParse %+v", errTDP)
 	}
 
 	tree.Print()
@@ -28,12 +29,22 @@ func main() {
 
 	sem := semantic.NewSemantic(tree)
 
-	errSem, rules := sem.StartSemanticAnalysis()
+	rules, errSem := sem.StartSemanticAnalysis()
 	if errSem != nil {
-		fmt.Println("err in sem", errSem)
+		log.Fatalf("err in semantic %+v", errSem)
 	}
 
 	rules.Print()
+
+	genTable, errT := predtable.GenTable(rules)
+	if errT != nil {
+		log.Fatalf("err in gen table: %+v", errSem)
+	}
+
+	predtable.PrintGenTable(genTable)
+
+	// TODO: и передаю это в функцию, которая сохраняет в папку top_down_parse таблицу и аксиому
+	// потом делаю код для калькулятора
 
 	fmt.Println("finish")
 }
