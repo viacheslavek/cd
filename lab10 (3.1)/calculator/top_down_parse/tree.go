@@ -53,7 +53,7 @@ func newLeafTreeNode(token lexer.IToken) *LeafTreeNode {
 }
 
 func (ltn LeafTreeNode) printNode(offset int) {
-	if ltn.Token.GetType() == lexer.TermTag || ltn.Token.GetType() == lexer.NonTermTag {
+	if ltn.Token.GetType() == lexer.IntTag {
 		fmt.Printf(strings.Repeat("..", offset) +
 			fmt.Sprintf("Leaf: %s - %s\n", lexer.TagToString[ltn.Token.GetType()], ltn.Token.GetValue()))
 	} else {

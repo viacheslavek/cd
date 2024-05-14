@@ -3,21 +3,19 @@ package lexer
 type DomainTag int
 
 const (
-	NonTermTag DomainTag = iota + 1
-	TermTag
+	IntTag DomainTag = iota + 1
 	OpenBracketTag
 	CloseBracketTag
-	AxiomTag
-	CommentTag
+	PlusTag
+	MultiplyTag
 	EopTag
 )
 
 var TagToString = map[DomainTag]string{
-	NonTermTag:      "NonTerminal",
-	TermTag:         "Terminal",
-	OpenBracketTag:  "OpenBracket",
-	CloseBracketTag: "CloseBracket",
-	AxiomTag:        "AxiomSign",
-	CommentTag:      "Comment",
+	IntTag:          "n",
+	OpenBracketTag:  "(",
+	CloseBracketTag: ")",
+	PlusTag:         "+",
+	MultiplyTag:     "*",
 	EopTag:          "Eop",
 }

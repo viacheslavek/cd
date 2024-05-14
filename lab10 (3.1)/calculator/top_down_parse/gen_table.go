@@ -2,26 +2,26 @@ package top_down_parse
 
 func newGenTable() map[string][]string {
 	return map[string][]string{
-		"DECLARATIONS - AxiomSign":   {"REWRITING_RULE", "DECLARATIONS"},
-		"DECLARATIONS - NonTerminal": {"REWRITING_RULE", "DECLARATIONS"},
-		"DECLARATIONS - Eof":         {},
+		"E - n": {"T", "E'"},
+		"E - )": {"T", "E'"},
 
-		"REWRITING_RULE - AxiomSign":   {"AxiomSign", "NonTerminal", "REWRITING"},
-		"REWRITING_RULE - NonTerminal": {"NonTerminal", "REWRITING"},
+		"T - n": {"F", "T'"},
+		"T - (": {"F", "T'"},
 
-		"REWRITING - OpenBracket": {"OpenBracket", "BODY", "CloseBracket", "REWRITING_OPT"},
+		"T' - *":   {"*", "F", "T'"},
+		"T' - +":   {},
+		"T' - )":   {},
+		"T' - Eof": {},
 
-		"REWRITING_OPT - AxiomSign":   {},
-		"REWRITING_OPT - NonTerminal": {},
-		"REWRITING_OPT - OpenBracket": {"OpenBracket", "BODY", "CloseBracket", "REWRITING_OPT"},
-		"REWRITING_OPT - Eof":         {},
+		"E' - +":   {"+", "T", "E'"},
+		"E' - )":   {},
+		"E' - Eof": {},
 
-		"BODY - NonTerminal":  {"NonTerminal", "BODY"},
-		"BODY - Terminal":     {"Terminal", "BODY"},
-		"BODY - CloseBracket": {},
+		"F - n": {"n"},
+		"F - (": {"(", "E", ")"},
 	}
 }
 
 func newGenAxiom() string {
-	return "DECLARATIONS"
+	return "E"
 }

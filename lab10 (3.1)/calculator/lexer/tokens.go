@@ -67,32 +67,6 @@ func (t Token) GetValue() string {
 	return t.Value
 }
 
-type Message struct {
-	isComment bool
-	text      string
-}
-
-func NewMessage(isComment bool, text string) Message {
-	return Message{
-		isComment: isComment,
-		text:      text,
-	}
-}
-
-type CommentToken struct {
-	Token
-}
-
-func NewComment(text string, fragment Fragment) CommentToken {
-	return CommentToken{
-		Token: NewToken(CommentTag, text, fragment),
-	}
-}
-
-func (ct CommentToken) String() string {
-	return fmt.Sprintf("%s %s: %s", TagToString[ct.Type], ct.Coordinate, ct.Value)
-}
-
 type EOPToken struct {
 	Token
 }
@@ -103,32 +77,18 @@ func NewEOP() EOPToken {
 	}
 }
 
-type NonTermToken struct {
+type IntegerToken struct {
 	Token
 }
 
-func NewNonTerminal(value string, fragment Fragment) NonTermToken {
-	return NonTermToken{
-		Token: NewToken(NonTermTag, value, fragment),
+func NewIntegerToken(value string, fragment Fragment) IntegerToken {
+	return IntegerToken{
+		Token: NewToken(IntTag, value, fragment),
 	}
 }
 
-func (ntt NonTermToken) String() string {
-	return fmt.Sprintf("%s %s: %s", TagToString[ntt.Type], ntt.Coordinate, ntt.Value)
-}
-
-type TerminalToken struct {
-	Token
-}
-
-func NewTerminal(value string, fragment Fragment) TerminalToken {
-	return TerminalToken{
-		Token: NewToken(TermTag, value, fragment),
-	}
-}
-
-func (tt TerminalToken) String() string {
-	return fmt.Sprintf("%s %s: %s", TagToString[tt.Type], tt.Coordinate, tt.Value)
+func (st IntegerToken) String() string {
+	return fmt.Sprintf("%s %s: %s", TagToString[st.Type], st.Coordinate, st.Value)
 }
 
 type OpenBracketToken struct {
@@ -159,16 +119,30 @@ func (st CloseBracketToken) String() string {
 	return fmt.Sprintf("%s %s: %s", TagToString[st.Type], st.Coordinate, st.Value)
 }
 
-type AxiomToken struct {
+type PlusToken struct {
 	Token
 }
 
-func NewAxiom(value string, fragment Fragment) AxiomToken {
-	return AxiomToken{
-		Token: NewToken(AxiomTag, value, fragment),
+func NewPlus(value string, fragment Fragment) PlusToken {
+	return PlusToken{
+		Token: NewToken(PlusTag, value, fragment),
 	}
 }
 
-func (st AxiomToken) String() string {
+func (st PlusToken) String() string {
+	return fmt.Sprintf("%s %s: %s", TagToString[st.Type], st.Coordinate, st.Value)
+}
+
+type MultiplyToken struct {
+	Token
+}
+
+func NewMultiply(value string, fragment Fragment) MultiplyToken {
+	return MultiplyToken{
+		Token: NewToken(MultiplyTag, value, fragment),
+	}
+}
+
+func (st MultiplyToken) String() string {
 	return fmt.Sprintf("%s %s: %s", TagToString[st.Type], st.Coordinate, st.Value)
 }

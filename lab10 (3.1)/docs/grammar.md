@@ -43,3 +43,13 @@ Terminal    ::= "[^"]+"
 
 `BODY ("Terminal" BODY) ("NonTerminal" BODY) ()`
 
+# Чуть понятнее для калькулятора
+
+```
+E -> T E' 
+E' -> + T E' | epsilon
+T -> F T'
+T' -> * F T' | epsilon
+F -> n | ( E )
+```
+

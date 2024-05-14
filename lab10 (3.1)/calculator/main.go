@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"github.com/VyacheslavIsWorkingNow/cd/lab10/calculator/interpreteter"
 	"log"
 
 	"github.com/VyacheslavIsWorkingNow/cd/lab10/calculator/lexer"
@@ -12,8 +14,9 @@ const filepath = "example.txt"
 func main() {
 	log.Println("start calculator")
 
-	// TODO: пишу лексер для калькулятора -> +, *, (, ), INT
 	scanner := lexer.NewScanner(filepath)
+
+	scanner.PrintTokens()
 
 	parser := top_down_parse.NewParser()
 
@@ -24,6 +27,7 @@ func main() {
 
 	tree.Print()
 
-	// TODO: делаю интерпретатор выражения по дереву
+	fmt.Println("solver:", interpreteter.Solve(tree))
 
+	log.Println("end calculator")
 }
