@@ -10,7 +10,7 @@ import (
 	"github.com/VyacheslavIsWorkingNow/cd/lab10/converter/top_down_parse"
 )
 
-const filepath = "test_files/grammarForGrammar.txt"
+const filepath = "test_files/basic.txt"
 
 func main() {
 
@@ -43,8 +43,7 @@ func main() {
 
 	predtable.PrintGenTable(genTable)
 
-	// TODO: и передаю это в функцию, которая сохраняет в папку top_down_parse таблицу и аксиому
-	// потом делаю код для калькулятора
+	// TODO: сохранять эту структуру в gen_table.go
 
 	fmt.Println("finish")
 }

@@ -3,7 +3,7 @@ package top_down_parse
 import (
 	"fmt"
 
-	"github.com/VyacheslavIsWorkingNow/cd/lab10/converter/lexer"
+	"github.com/VyacheslavIsWorkingNow/cd/lab10/calculator/lexer"
 )
 
 type Parser struct {
