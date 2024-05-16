@@ -101,7 +101,9 @@ func traverseTree(
 
 }
 
-func convertTreeToRewritingsRules(tree top_down_parse.TreeNode, rules *Rules, leftNonTerminals *map[string]struct{}) {
+func convertTreeToRewritingsRules(
+	tree top_down_parse.TreeNode, rules *Rules, leftNonTerminals *map[string]struct{},
+) {
 	log.Println("start convert")
 
 	root, errRoot := checkDeclarationNode(tree.Root.Children[0])
@@ -134,7 +136,9 @@ func checkDeclarationNode(node top_down_parse.TreeNodePrinter) (*top_down_parse.
 	return innerNode, nil
 }
 
-func handleDeclarations(node *top_down_parse.InnerTreeNode, rules *Rules, leftNonTerminals *map[string]struct{}) {
+func handleDeclarations(
+	node *top_down_parse.InnerTreeNode, rules *Rules, leftNonTerminals *map[string]struct{},
+) {
 	if len(node.Children) == 2 {
 		// Первый - RewritingRule, Второй - Declaration
 		rewritingRule, errRR := checkRewritingRuleNode(node.Children[0])
@@ -170,7 +174,9 @@ func checkRewritingRuleNode(node top_down_parse.TreeNodePrinter) (*top_down_pars
 	return innerNode, nil
 }
 
-func handleRewritingRule(node *top_down_parse.InnerTreeNode, rules *Rules, leftNonTerminals *map[string]struct{}) {
+func handleRewritingRule(
+	node *top_down_parse.InnerTreeNode, rules *Rules, leftNonTerminals *map[string]struct{},
+) {
 	if len(node.Children) == 3 {
 		// Первый - Axiom, Второй - NonTerminal Leaf, Третий - REWRITING
 		axiom, errA := getLeafValue(node.Children[0])

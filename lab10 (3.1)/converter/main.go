@@ -10,10 +10,10 @@ import (
 	"github.com/VyacheslavIsWorkingNow/cd/lab10/converter/top_down_parse"
 )
 
-const filepath = "test_files/grammarForGrammar.txt"
+const filepath = "test_files/basic.txt"
 
 const (
-	tablePath = "top_down_parse/gen_table.go"
+	tablePath = "top_down_parse/gen_table_report.go"
 )
 
 func main() {
