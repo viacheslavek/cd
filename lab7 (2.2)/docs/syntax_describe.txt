@@ -1,0 +1,173 @@
+Приведем описание абстрактного и конкретного синтаксиса для задания
+
+Определения структур, объединений и перечислений языка Си.
+В инициализаторах перечислений допустимы знаки операций +, -, *, /, sizeof,
+операндами могут служить имена перечислимых значений и целые числа.
+
+Числовые константы могут быть только целочисленными и десятичными.
+
+Примеры синтаксиса можно увидеть в папке tests
+
+Поначалу я составлял синтаксис сам, но спустя часы некорректного составления я обратился к стандарту
+ISO/IEC 9899:1999 (E), где почерпнул некоторые идеи
+
+Абстрактный синтаксис:
+
+Program -> DeclarationList
+
+DeclarationList -> Declaration*
+
+Declaration -> TypeSpecifier AbstractDeclaratorsOpt ;
+
+
+AbstractDeclaratorsOpt -> (AbstractDeclarators)?
+
+AbstractDeclarators -> AbstractDeclarator (, AbstractDeclarator)*
+
+AbstractDeclaratorOpt -> (AbstractDeclarator)?
+
+
+AbstractDeclarator -> AbstractDeclaratorStar | AbstractDeclaratorArrayListOpt
+AbstractDeclaratorStar -> STAR AbstractDeclarator
+
+AbstractDeclaratorArrayListOpt -> (AbstractDeclaratorArrayList)?
+AbstractDeclaratorArrayList -> AbstractDeclaratorArrayListOpt AbstractDeclaratorArray
+
+AbstractDeclaratorArray -> AbstractDeclaratorArray [ Expression ] | AbstractDeclaratorPrim
+
+AbstractDeclaratorPrim -> AbstractDeclaratorPrimSimple | AbstractDeclaratorPrimDifficult
+
+AbstractDeclaratorPrimSimple -> IDENTIFIER
+AbstractDeclaratorPrimDifficult -> ( AbstractDeclarator )
+
+
+TypeSpecifier -> SimpleTypeSpecifier | EnumTypeSpecifier
+
+
+SimpleTypeSpecifier -> SimpleType
+
+SimpleType -> CHAR | SHORT | INT | LONG | FLOAT | DOUBLE | SIGNED | UNSIGNED
+
+
+EnumTypeSpecifier -> ENUM EnumStatement
+
+EnumStatement -> FullEnumStatement | EmptyEnumStatement
+
+FullEnumStatement -> IdentifierOpt { EnumeratorList CommaOpt }
+
+IdentifierOpt -> (IDENTIFIER)?
+
+EmptyEnumStatement -> IDENTIFIER
+
+EnumeratorList -> Enumerator (, Enumerator)*
+
+Enumerator -> IDENTIFIER EnumeratorExpressionOpt
+
+EnumeratorExpressionOpt -> (= ConstantExpression)?
+
+
+CommaOpt -> (,)?
+
+
+ConstantExpression -> Expression
+
+Expression -> IDENTIFIER | INT | Expression BinOp Expression | UnOp Expression
+BinaryOperation -> + | - | * | /
+UnaryOperation -> + | - | sizeof ( TypeSpecifier AbstractDeclaratorsOpt )
+
+
+StructOrUnionSpecifier -> StructOrUnion StructOrUnionStatement
+
+StructOrUnion -> STRUCT | UNION
+
+StructOrUnionStatement -> FullStructOrUnionStatement | EmptyStructOrUnionStatement
+
+EmptyStructOrUnionStatement -> IDENTIFIER
+
+FullStructOrUnionStatement -> IdentifierOpt { DeclarationList }
+
+
+
+
+Конкретный синтаксис:
+
+Program -> DeclarationList
+
+DeclarationList -> Declaration | DeclarationList Declaration
+
+Declaration -> TypeSpecifier AbstractDeclaratorsOpt ;
+
+
+AbstractDeclaratorsOpt -> AbstractDeclarators | ε
+
+AbstractDeclarators -> AbstractDeclarators , AbstractDeclarator | AbstractDeclarator
+
+AbstractDeclaratorOpt -> AbstractDeclarator | ε
+
+AbstractDeclarator -> AbstractDeclaratorStar | AbstractDeclaratorArrayListOpt
+AbstractDeclaratorStar -> STAR AbstractDeclarator
+
+
+AbstractDeclaratorArrayListOpt -> AbstractDeclaratorArrayList | ε
+AbstractDeclaratorArrayList -> AbstractDeclaratorArrayListOpt AbstractDeclaratorArray
+
+AbstractDeclaratorArray -> AbstractDeclaratorArray [ Expression ] | AbstractDeclaratorPrim
+
+AbstractDeclaratorPrim -> AbstractDeclaratorPrimSimple | AbstractDeclaratorPrimDifficult
+
+AbstractDeclaratorPrimSimple -> IDENTIFIER
+AbstractDeclaratorPrimDifficult -> ( AbstractDeclarator )
+
+
+TypeSpecifier -> SimpleTypeSpecifier | EnumTypeSpecifier
+
+
+SimpleTypeSpecifier -> SimpleType
+
+SimpleType -> CHAR | SHORT | INT | LONG | FLOAT | DOUBLE | SIGNED | UNSIGNED
+
+
+EnumTypeSpecifier -> ENUM EnumStatement
+
+EnumStatement -> FullEnumStatement | EmptyEnumStatement
+
+FullEnumStatement -> IdentifierOpt { EnumeratorList CommaOpt }
+
+IdentifierOpt -> IDENTIFIER | ε
+
+EmptyEnumStatement -> IDENTIFIER
+
+EnumeratorList -> EnumeratorList , Enumerator | Enumerator
+
+Enumerator -> IDENTIFIER EnumeratorExpressionOpt
+
+EnumeratorExpressionOpt -> = ConstantExpression | ε
+
+
+CommaOpt -> , | ε
+
+
+ConstantExpression -> Expression
+
+Expression -> ArithmeticExpression
+
+ArithmeticExpression -> Term | + Term | - Term | ArithmeticExpression AddOperation Term
+
+AddOperation -> + | -
+
+Term -> Factor | Term MultyOperation Factor
+MultyOperation -> * | /
+
+Factor -> sizeof ( TypeSpecifier AbstractDeclaratorsOpt ) | IDENTIFIER | INT | ( Expression )
+
+
+StructOrUnionSpecifier -> StructOrUnion StructOrUnionStatement
+
+StructOrUnion -> STRUCT | UNION
+
+StructOrUnionStatement -> FullStructOrUnionStatement | EmptyStructOrUnionStatement
+
+EmptyStructOrUnionStatement -> IDENTIFIER
+
+FullStructOrUnionStatement -> IdentifierOpt { DeclarationList }
+
