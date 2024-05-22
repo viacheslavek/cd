@@ -1,21 +1,3 @@
-
-Temp file
-
-EnumStatement -> "{" EnumeratorList CommaOpt "}" .
-
-EnumeratorList -> Enumerator InnerEnumeratorList .
-InnerEnumeratorList -> "," Enumerator InnerEnumeratorList .
-InnerEnumeratorList -> .
-
-CommaOpt -> "," .
-CommaOpt -> .
-
-
-?????
-
-
-////// ____________________: тогда
-
 Program -> DeclarationList .
 
 DeclarationList -> .
@@ -37,9 +19,9 @@ AbstractDeclarator -> AbstractDeclaratorArrayList .
 AbstractDeclaratorStar -> "*" AbstractDeclarator .
 
 
-AbstractDeclaratorArrayList -> AbstractDeclaratorArray InnerAbstractDeclaratorArrayList . 
+AbstractDeclaratorArrayList -> AbstractDeclaratorArray InnerAbstractDeclaratorArrayList .
 InnerAbstractDeclaratorArrayList -> AbstractDeclaratorArray AbstractDeclaratorArrayList.  
-InnerAbstractDeclaratorArrayList -> .                                                    
+InnerAbstractDeclaratorArrayList -> .
 
 
 AbstractDeclaratorArray -> "[" Expression "]" .
@@ -73,22 +55,21 @@ EnumTypeSpecifier -> ENUM EnumStatement .
 EnumStatement -> IDENTIFIER FullEnumStatementOpt .
 EnumStatement -> FullEnumStatement .
 
-FullEnumStatement -> "{" EnumeratorList EndEnumStatement .
-
 FullEnumStatementOpt -> FullEnumStatement .
 FullEnumStatementOpt -> .
 
-EnumeratorList -> Enumerator "," EnumeratorList .
-EnumeratorList -> Enumerator .
+FullEnumStatement -> "{" EnumeratorList "}" .
+
+
+EnumeratorList -> Enumerator InnerEnumeratorList .    
+InnerEnumeratorList -> "," Enumerator .             
+InnerEnumeratorList -> .
+
 
 Enumerator -> IDENTIFIER EnumeratorExpressionOpt .
 
 EnumeratorExpressionOpt -> "=" ConstantExpression .
 EnumeratorExpressionOpt -> .
-
-EndEnumStatement -> ",}" .
-EndEnumStatement -> .
-
 
 ConstantExpression -> Expression .
 
@@ -124,7 +105,4 @@ StructOrUnionStatement -> EmptyStructOrUnionStatement .
 EmptyStructOrUnionStatement -> IDENTIFIER .
 
 FullStructOrUnionStatement -> IdentifierOpt "{" DeclarationList "}" .
-
-
-
 

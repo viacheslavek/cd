@@ -1,0 +1,14 @@
+enum ScreenType {
+  SCREEN_TYPE_TEXT
+} screen_type;
+
+struct ScreenChar {
+};
+
+struct ScreenChar {
+} screen_type_4, screen_type_5, screen_type_6;
+
+union {
+  int int_value;
+} screen_type_2[1], *screen_type_3;
+
