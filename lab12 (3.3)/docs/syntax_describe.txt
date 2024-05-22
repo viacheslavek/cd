@@ -98,20 +98,16 @@ DeclarationList -> Declaration | DeclarationList Declaration
 Declaration -> TypeSpecifier AbstractDeclaratorsOpt ;
 
 
-AbstractDeclaratorsOpt -> AbstractDeclarators | ε
+AbstractDeclaratorsOpt -> AbstractDeclaratorList | ε
 
-AbstractDeclarators -> AbstractDeclarators , AbstractDeclarator | AbstractDeclarator
+AbstractDeclaratorList -> AbstractDeclaratorList , AbstractDeclarator | AbstractDeclarator
 
-AbstractDeclaratorOpt -> AbstractDeclarator | ε
+AbstractDeclarator -> AbstractDeclaratorStar | AbstractDeclaratorArrayList
+AbstractDeclaratorPointer -> STAR AbstractDeclarator
 
-AbstractDeclarator -> AbstractDeclaratorStar | AbstractDeclaratorArrayListOpt
-AbstractDeclaratorStar -> STAR AbstractDeclarator
+AbstractDeclaratorArrayList -> AbstractDeclaratorArrayList AbstractDeclaratorArray | AbstractDeclaratorArray
 
-
-AbstractDeclaratorArrayListOpt -> AbstractDeclaratorArrayList | ε
-AbstractDeclaratorArrayList -> AbstractDeclaratorArrayListOpt AbstractDeclaratorArray
-
-AbstractDeclaratorArray -> AbstractDeclaratorArray [ Expression ] | AbstractDeclaratorPrim
+AbstractDeclaratorArray -> [ Expression ] | AbstractDeclaratorPrim
 
 AbstractDeclaratorPrim -> AbstractDeclaratorPrimSimple | AbstractDeclaratorPrimDifficult
 
@@ -176,9 +172,9 @@ FullStructOrUnionStatement -> IdentifierOpt { DeclarationList }
 
 1) Теги структур, теги перечислений и теги объединений не должны повторяться.
 За это отвечает терминал IDENTIFIER, он при объявлении в
-    - NAbstractDeclaratorPrimSimple
+    - NAbstractDeclaratorPrimSimple -> готово
 
-    - NEmptyEnumStatement
+    - NEmptyEnumStatement -> в процессе
     - NIdentifierOpt в NFullEnumStatement
 
     - NEmptyStructOrUnionStatement

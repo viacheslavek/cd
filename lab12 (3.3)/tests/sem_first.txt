@@ -12,3 +12,7 @@ union {
   int int_value;
 } screen_type_2[1], *screen_type_3;
 
+union {
+  int int_value;
+} screen_type_2, screen_type_3;
+

@@ -12,13 +12,13 @@ class SemanticError(pe.Error, ABC):
 
 
 class RepeatedIdentifier(SemanticError):
-    def __init__(self, pos, varname):
+    def __init__(self, pos, ident):
         self.pos = pos
-        self.varname = varname
+        self.ident = ident
 
     @property
     def message(self):
-        return f'Повторный идентификатор {self.varname}'
+        return f'Повторный идентификатор {self.ident}'
 
 
 @dataclass
@@ -131,23 +131,31 @@ class AbstractDeclarator(abc.ABC):
 
 @dataclass
 class AbstractDeclaratorPointer(AbstractDeclarator):
-    declarator: str
+    declarator: AbstractDeclarator
 
     def check(self):
-        print("AbstractDeclaratorPointer")
+        print("abstractDeclaratorPointer", self.declarator)
+        self.declarator.check()
 
 
 @dataclass
 class AbstractDeclaratorArrayList:
     arrays: list[AbstractDeclarator]
 
+    def check(self):
+        print("arrays", self.arrays)
+        for ad in self.arrays:
+            print("ad in arrays", ad)
+            ad.check()
+
 
 @dataclass
 class AbstractDeclaratorArray(AbstractDeclarator):
-    declarator: str
+    declarator: Expression
 
     def check(self):
-        print("AbstractDeclaratorArray")
+        print("abstractDeclaratorArray", self.declarator)
+        # TODO: здесь уже смогу смотреть expression
 
 
 @dataclass
@@ -156,8 +164,7 @@ class AbstractDeclaratorsOpt:
 
     def check(self):
         for ad in self.abstractDeclaratorList:
-            print("ad:", ad)
-            print("type:", type(ad))
+            ad.check()
             print()
 
 
@@ -178,7 +185,7 @@ class Declaration:
     varName: AbstractDeclaratorsOpt
 
     def check(self):
-        # Проверяю на совпадение Identifier
+        # Проверяю первый пункт
         self.varName.check()
 
 
@@ -190,11 +197,29 @@ class AbstractDeclaratorPrim(abc.ABC):
 @dataclass
 class AbstractDeclaratorPrimSimple(AbstractDeclaratorPrim):
     identifier: str
+    identifier_pos: pe.Position
+
+    @pe.ExAction
+    def create(self, coords, res_coord):
+        print("in create", self, coords, res_coord)
+        ident, = self
+        idc, = coords
+        print("ident", ident, "idc", idc)
+        return AbstractDeclaratorPrimSimple(ident, idc.start)
+
+    def check(self):
+        print("in AbstractDeclaratorPrimSimple", self.identifier)
+        if check_and_add_to_map(self.identifier):
+            raise RepeatedIdentifier(self.identifier_pos, self.identifier)
 
 
 @dataclass
 class AbstractDeclaratorPrimDifficult(AbstractDeclaratorPrim):
     identifier: AbstractDeclarator
+
+    def check(self):
+        print("in AbstractDeclaratorPrimDifficult")
+        self.identifier.check()
 
 
 @dataclass
@@ -204,6 +229,17 @@ class FullStructOrUnionStatement(StructOrUnionStatement):
 
 
 esuIdent = {}
+
+
+def check_and_add_to_map(s):
+    if s in esuIdent:
+        print("повтор")
+        return True
+    else:
+        esuIdent[s] = True
+        return False
+
+
 constName = {}
 
 
@@ -311,7 +347,7 @@ NAbstractDeclaratorsOpt |= NAbstractDeclarators, AbstractDeclaratorsOpt
 NAbstractDeclarators |= NAbstractDeclarator, lambda a: [a]
 NAbstractDeclarators |= NAbstractDeclarators, ',', NAbstractDeclarator, lambda ads, a: ads + [a]
 
-NAbstractDeclarator |= NAbstractDeclaratorStar
+NAbstractDeclarator |= NAbstractDeclaratorStar, AbstractDeclaratorPointer
 NAbstractDeclarator |= NAbstractDeclaratorArrayList, AbstractDeclaratorArrayList
 
 NAbstractDeclaratorStar |= '*', NAbstractDeclarator, AbstractDeclaratorPointer
@@ -323,7 +359,7 @@ NAbstractDeclaratorArrayList |= (NAbstractDeclaratorArrayList, NAbstractDeclarat
 NAbstractDeclaratorArray |= '[', NExpression, ']', AbstractDeclaratorArray
 
 NAbstractDeclaratorArray |= NAbstractDeclaratorPrim
-NAbstractDeclaratorPrim |= NAbstractDeclaratorPrimSimple, AbstractDeclaratorPrimSimple
+NAbstractDeclaratorPrim |= NAbstractDeclaratorPrimSimple, AbstractDeclaratorPrimSimple.create
 
 NAbstractDeclaratorPrim |= NAbstractDeclaratorPrimDifficult, AbstractDeclaratorPrimDifficult
 
@@ -420,7 +456,7 @@ def main():
 
     p.add_skipped_domain('\\s')
 
-    files = ["tests/sem_first.txt"]
+    # files = ["tests/sem_first.txt"]
     files = ["tests/mixed.txt"]
 
     for filename in files:
@@ -429,6 +465,7 @@ def main():
             with open(filename) as f:
                 tree = p.parse(f.read())
                 pprint(tree)
+                print()
                 tree.check()
         except pe.Error as e:
             print(f'Ошибка {e.pos}: {e.message}')
@@ -437,3 +474,6 @@ def main():
 
 
 main()
+
+
+print("esuIdent:", esuIdent)
