@@ -2,11 +2,11 @@ struct Coords {
   int x, y;
 };
 
-enum ScreenType { aaa = bab } *screenType[5 + 5], **fas;
+enum ScreenType1 { aaa = bab } *screenType[5 + 5], **fas;
 
-enum ScreenType { aaa = bab } *screenType2[5 + 5], **fas2;
+enum ScreenType2 { aaa = bab } *screenType2[5 + 5], **fas2;
 
-enum ScreenType { aaa = bab } a1[1], *a2[1], (*a3)[1];
+enum ScreenType3 { aaa = bab } a1[1], *a2[1], (*a3)[1];
 
 enum Color {
   COLOR_RED = 1,
@@ -15,7 +15,7 @@ enum Color {
   COLOR_HIGHLIGHT = 8,
 };
 
-enum ScreenType {
+enum ScreenType4 {
   SCREEN_TYPE_TEXT,
   SCREEN_TYPE_GRAPHIC
 } screen_type;
@@ -27,22 +27,22 @@ enum {
   WCHARS = 80,
 };
 
-struct ScreenChar {
+struct ScreenChar1 {
   char symbol;
-  enum Color sym_color;
-  enum Color back_color;
+  enum Color1 sym_color;
+  enum Color2 back_color;
 };
 
 struct TextScreen {
-  struct ScreenChar chars[HCHARS][WCHARS];
+  struct ScreenChar2 chars[HCHARS][WCHARS];
 };
 
 struct GrahpicScreen {
-  enum Color pixels[HPIXELS][WPIXELS];
+  enum Color3 pixels[HPIXELS][WPIXELS];
 };
 
 union Screen {
-  struct TextScreen text;
+  struct TextScreen1 text;
   struct GraphicScreen graphic;
 };
 
@@ -51,7 +51,7 @@ enum {
   PAGES_FOR_BUFFER = (BUFFER_SIZE + PAGE_SIZE - 1) / PAGE_SIZE
 };
 
-struct Token {
+struct Token2 {
   struct Fragment {
     struct Pos {
       int line;
@@ -64,11 +64,12 @@ struct Token {
   union {
     char *name;
     int int_value;
-    double float_value;
+    double float_value1;
+    double float_value2;
   } info;
 };
 
-struct List {
-  struct Token value;
-  struct List *next;
+struct List1 {
+  struct Token3 value;
+  struct List2 *next;
 };

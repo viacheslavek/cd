@@ -168,35 +168,3 @@ EmptyStructOrUnionStatement -> IDENTIFIER
 FullStructOrUnionStatement -> IdentifierOpt { DeclarationList }
 
 
-Проверки:
-
-1) Теги структур, теги перечислений и теги объединений не должны повторяться.
-За это отвечает терминал IDENTIFIER, он при объявлении в
-    - NAbstractDeclaratorPrimSimple -> готово
-
-    - NEmptyEnumStatement -> в процессе
-    - NIdentifierOpt в NFullEnumStatement
-
-    - NEmptyStructOrUnionStatement
-    - NIdentifierOpt в NFullStructOrUnionStatement
-
-Добавляются в глобальный мапу esuIdent (упорядоченный). Если он повторяется, то ошибка.
-
-
-2) Enum’ы определяют глобальные константы, они тоже не должны повторяться.
-То есть при встрече в NEnumerator IDENT я добавляю его в constName мапу.
-В нем нет повторений и он обязательно упорядоченный. Иначе - ошибка
-При добавлении я сохраняю имя как ключ и expression как значение.
-Expression потом можно будет сразу считать. Если Expression пуст, то добавляю номер в массиве в значение.
-
-
-3) В структурах и объединениях не могут встречаться одноимённые поля.
-В NFullStructOrUnionStatement в NDeclarationList
-не должно быть совпадающих NAbstractDeclaratorPrimSimple на одном уровне.
-
-
-4) Используемые идентификаторы должны быть определены выше по тексту.
-Если попадаем в NFactor, то он должен быть либо в esuIdent, либо в constName. Иначе ошибка
-
-
-

@@ -1,18 +1,34 @@
-enum ScreenType {
-  SCREEN_TYPE_TEXT
-} screen_type;
+enum ScreenType1 {
+  SCREEN_TYPE_TEXT1
+} screen_type1;
 
-struct ScreenChar {
+enum Color {
+  COLOR_RED = 1,
+  COLOR_GREEN = 2,
+  COLOR_BLUE = 2*2,
+  COLOR_HIGHLIGHT = 8,
 };
 
-struct ScreenChar {
-} screen_type_4, screen_type_5, screen_type_6;
+enum ScreenType4 {
+  SCREEN_TYPE_TEXT,
+  SCREEN_TYPE_GRAPHIC,
+  BUFFER_SIZE
+} screen_type;
 
-union {
-  int int_value;
-} screen_type_2[1], *screen_type_3;
+enum {
+  SCREEN_TYPE_TEXT2
+} screen_type2;
 
-union {
-  int int_value;
-} screen_type_2, screen_type_3;
+enum {
+  HPIXELS = 480,
+  WPIXELS = 640,
+  HCHARS = 24,
+  WCHARS = 80,
+};
 
+enum {
+  PAGE_SIZE = 4096,
+  PAGES_FOR_BUFFER = (BUFFER_SIZE + PAGE_SIZE - 1) / PAGE_SIZE
+};
+
+enum ScreenType3 screen_type3;

@@ -11,6 +11,16 @@ class SemanticError(pe.Error, ABC):
     pass
 
 
+class RepeatedTag(SemanticError):
+    def __init__(self, pos, ident):
+        self.pos = pos
+        self.ident = ident
+
+    @property
+    def message(self):
+        return f'Повторный тег {self.ident}'
+
+
 class RepeatedIdentifier(SemanticError):
     def __init__(self, pos, ident):
         self.pos = pos
@@ -21,9 +31,30 @@ class RepeatedIdentifier(SemanticError):
         return f'Повторный идентификатор {self.ident}'
 
 
+class RepeatedConstant(SemanticError):
+    def __init__(self, pos, ident):
+        self.pos = pos
+        self.ident = ident
+
+    @property
+    def message(self):
+        return f'Повторная константа {self.ident}'
+
+
+class UnannouncedConstant(SemanticError):
+    def __init__(self, pos, ident):
+        self.pos = pos
+        self.ident = ident
+
+    @property
+    def message(self):
+        return f'Необъявленная константа {self.ident}'
+
+
 @dataclass
 class TypeSpecifier(abc.ABC):
-    pass
+    def check(self):
+        pass
 
 
 class SimpleType(enum.Enum):
@@ -38,33 +69,63 @@ class SimpleType(enum.Enum):
 
 
 class Expression(abc.ABC):
-    pass
+    def check(self):
+        pass
 
 
 @dataclass
 class ConstantExpression:
     expression: Expression
 
+    def check(self):
+        pass
+
 
 @dataclass
 class Enumerator:
     identifier: str
     constantExpression: ConstantExpression
+    identifier_pos: pe.Position
 
+    @pe.ExAction
+    def create(self, coords, res_coord):
+        ident, constExpr = self
+        idc, _ = coords
+        return Enumerator(ident, constExpr, idc.start)
 
-@dataclass
-class EnumeratorList:
-    body: list[Enumerator]
+    def check(self, enum_pos):
+        if check_const(self.identifier):
+            raise RepeatedConstant(self.identifier_pos, self.identifier)
+        if isinstance(self.constantExpression, ConstantExpression):
+            add_to_const(self.identifier, self.constantExpression.expression)
+            print("in Enumerator full содержит", self.constantExpression.expression)
+            self.constantExpression.expression.check()
+
+        # TODO: где-то тут у меня будет функция "посчитать константное выражение"
+        else:
+            add_to_const(self.identifier, enum_pos)
 
 
 @dataclass
 class StructOrUnionStatement(abc.ABC):
-    pass
+    def check(self):
+        pass
 
 
 @dataclass
 class EmptyStructOrUnionStatement(StructOrUnionStatement):
     identifier: str
+    identifier_pos: pe.Position
+
+    @pe.ExAction
+    def create(self, coords, res_coord):
+        ident, = self
+        idc, = coords
+        return EmptyStructOrUnionStatement(ident, idc.start)
+
+    def check(self):
+        if check_and_add_to_map(self.identifier, esu_tag):
+            raise RepeatedTag(self.identifier_pos, self.identifier)
 
 
 @dataclass
@@ -72,37 +133,84 @@ class StructOrUnionSpecifier(TypeSpecifier):
     type: str
     structOrUnionSpecifier: StructOrUnionStatement
 
+    def check(self):
+        self.structOrUnionSpecifier.check()
+
 
 @dataclass
 class EnumStatement(abc.ABC):
-    pass
+    def check(self):
+        pass
 
 
 @dataclass
 class EnumTypeSpecifier(TypeSpecifier):
     enumStatement: EnumStatement
 
+    def check(self):
+        self.enumStatement.check()
+
 
 @dataclass
 class FullEnumStatement(EnumStatement):
     identifier: str
-    enumeratorList: EnumeratorList
+    enumeratorList: list[Enumerator]
     isEndComma: bool
+    identifier_pos: pe.Position
+
+    @pe.ExAction
+    def create(self, coords, res_coord):
+        ident, enList, IsComma = self
+        idc, _, enc, _, icc = coords
+        return FullEnumStatement(ident, enList, IsComma, idc.start)
+
+    def check(self):
+        if len(self.identifier) != 0 and check_and_add_to_map(self.identifier, esu_tag):
+            raise RepeatedTag(self.identifier_pos, self.identifier)
+
+        for idx, enumerator in enumerate(self.enumeratorList):
+            enumerator.check(idx)
 
 
 @dataclass
 class EmptyEnumStatement(EnumStatement):
     identifier: str
+    identifier_pos: pe.Position
+
+    @pe.ExAction
+    def create(self, coords, res_coord):
+        ident, = self
+        idc, = coords
+        return EmptyEnumStatement(ident, idc.start)
+
+    def check(self):
+        if check_and_add_to_map(self.identifier, esu_tag):
+            raise RepeatedTag(self.identifier_pos, self.identifier)
 
 
 @dataclass
 class IdentifierExpression(Expression):
     identifier: str
+    identifier_pos: pe.Position
+
+    @pe.ExAction
+    def create(self, coords, res_coord):
+        ident, = self
+        idc, = coords
+        return IdentifierExpression(ident, idc.start)
+
+    def check(self):
+        if not check_const(self.identifier):
+            raise UnannouncedConstant(self.identifier_pos, self.identifier)
 
 
 @dataclass
 class IntExpression(Expression):
     value: int
+
+    def check(self):
+        # Начало вычисления для expression
+        print("IntExpression")
 
 
 @dataclass
@@ -111,11 +219,20 @@ class BinaryOperationExpression(Expression):
     operation: str
     right: Expression
 
+    def check(self):
+        print("BinaryOperationExpression")
+        self.left.check()
+        self.right.check()
+
 
 @dataclass
 class UnaryOperationExpression(Expression):
     operation: str
     expression: Expression
+
+    def check(self):
+        print("UnaryOperationExpression")
+        self.expression.check()
 
 
 @dataclass
@@ -134,7 +251,6 @@ class AbstractDeclaratorPointer(AbstractDeclarator):
     declarator: AbstractDeclarator
 
     def check(self):
-        print("abstractDeclaratorPointer", self.declarator)
         self.declarator.check()
 
 
@@ -143,9 +259,7 @@ class AbstractDeclaratorArrayList:
     arrays: list[AbstractDeclarator]
 
     def check(self):
-        print("arrays", self.arrays)
         for ad in self.arrays:
-            print("ad in arrays", ad)
             ad.check()
 
 
@@ -154,8 +268,10 @@ class AbstractDeclaratorArray(AbstractDeclarator):
     declarator: Expression
 
     def check(self):
-        print("abstractDeclaratorArray", self.declarator)
+        pass
+        # print("abstractDeclaratorArray", self.declarator)
         # TODO: здесь уже смогу смотреть expression
+        # И здесь проверяю 2 пункт
 
 
 @dataclass
@@ -165,18 +281,25 @@ class AbstractDeclaratorsOpt:
     def check(self):
         for ad in self.abstractDeclaratorList:
             ad.check()
-            print()
 
 
 @dataclass
 class SimpleTypeSpecifier(TypeSpecifier):
     simpleType: SimpleType
 
+    def check(self):
+        # вроде не пригодится
+        pass
+
 
 @dataclass
 class SizeofExpression(Expression):
     declarationBody: TypeSpecifier
     varName: AbstractDeclaratorsOpt
+
+    def check(self):
+        # TODO: до него надо еще дойти
+        print("это sizeof")
 
 
 @dataclass
@@ -185,8 +308,10 @@ class Declaration:
     varName: AbstractDeclaratorsOpt
 
     def check(self):
-        # Проверяю первый пункт
         self.varName.check()
+        # print("in declarationBody", self.declarationBody)
+        self.declarationBody.check()
+        print()
 
 
 @dataclass
@@ -201,15 +326,12 @@ class AbstractDeclaratorPrimSimple(AbstractDeclaratorPrim):
 
     @pe.ExAction
     def create(self, coords, res_coord):
-        print("in create", self, coords, res_coord)
         ident, = self
         idc, = coords
-        print("ident", ident, "idc", idc)
         return AbstractDeclaratorPrimSimple(ident, idc.start)
 
     def check(self):
-        print("in AbstractDeclaratorPrimSimple", self.identifier)
-        if check_and_add_to_map(self.identifier):
+        if check_and_add_to_map(self.identifier, esu_ident):
             raise RepeatedIdentifier(self.identifier_pos, self.identifier)
 
 
@@ -218,7 +340,6 @@ class AbstractDeclaratorPrimDifficult(AbstractDeclaratorPrim):
     identifier: AbstractDeclarator
 
     def check(self):
-        print("in AbstractDeclaratorPrimDifficult")
         self.identifier.check()
 
 
@@ -226,21 +347,45 @@ class AbstractDeclaratorPrimDifficult(AbstractDeclaratorPrim):
 class FullStructOrUnionStatement(StructOrUnionStatement):
     identifierOpt: str
     declarationList: list[Declaration]
+    identifier_pos: pe.Position
+
+    @pe.ExAction
+    def create(self, coords, res_coord):
+        ident, declList = self
+        idc, _, dc, _ = coords
+        return FullStructOrUnionStatement(ident, declList, idc.start)
+
+    def check(self):
+        if len(self.identifierOpt) != 0 and check_and_add_to_map(self.identifierOpt, esu_tag):
+            raise RepeatedTag(self.identifier_pos, self.identifierOpt)
+
+        for declaration in self.declarationList:
+            declaration.check()
 
 
-esuIdent = {}
+esu_ident = {}
+
+esu_tag = {}
 
 
-def check_and_add_to_map(s):
-    if s in esuIdent:
+def check_and_add_to_map(s, in_map):
+    if s in in_map:
         print("повтор")
         return True
     else:
-        esuIdent[s] = True
+        in_map[s] = True
         return False
 
 
-constName = {}
+const_name = {}
+
+
+def check_const(ident):
+    return ident in const_name
+
+
+def add_to_const(ident, expr):
+    const_name[ident] = expr
 
 
 @dataclass
@@ -292,9 +437,7 @@ NConstantExpression = pe.NonTerminal('ConstantExpression')
 
 NIdentifierOpt = pe.NonTerminal('IdentifierOpt')
 
-
 NCommaOpt = pe.NonTerminal('CommaOpt')
-
 
 NExpression = pe.NonTerminal('Expression')
 
@@ -304,7 +447,6 @@ NAddOperation = pe.NonTerminal('AddOperation')
 
 NFactor = pe.NonTerminal('Factor')
 NMultyOperation = pe.NonTerminal('MultyOperation')
-
 
 NStructOrUnionSpecifier = pe.NonTerminal('StructOrUnionSpecifier')
 
@@ -332,7 +474,6 @@ KW_CHAR, KW_SHORT, KW_INT, KW_LONG, KW_FLOAT, KW_DOUBLE, KW_SIGNED, KW_UNSIGNED 
 INTEGER = pe.Terminal('IDENTIFIER', r'[0-9]*', str)
 
 IDENTIFIER = pe.Terminal('IDENTIFIER', r'[A-Za-z_]([A-Za-z_0-9])*', str)
-
 
 NProgram |= NDeclarationList, Program
 
@@ -367,7 +508,6 @@ NAbstractDeclaratorPrimSimple |= IDENTIFIER
 
 NAbstractDeclaratorPrimDifficult |= '(', NAbstractDeclarator, ')'
 
-
 NTypeSpecifier |= NEnumTypeSpecifier
 NTypeSpecifier |= NSimpleTypeSpecifier
 NTypeSpecifier |= NStructOrUnionSpecifier
@@ -383,31 +523,29 @@ NSimpleType |= KW_DOUBLE, lambda: SimpleType.Double
 NSimpleType |= KW_SIGNED, lambda: SimpleType.Signed
 NSimpleType |= KW_UNSIGNED, lambda: SimpleType.Unsigned
 
-
 NEnumTypeSpecifier |= KW_ENUM, NEnumStatement, EnumTypeSpecifier
 
 NEnumStatement |= NFullEnumStatement
 
-NFullEnumStatement |= NIdentifierOpt, '{', NEnumeratorList, NCommaOpt, '}', FullEnumStatement
+NFullEnumStatement |= NIdentifierOpt, '{', NEnumeratorList, NCommaOpt, '}', FullEnumStatement.create
 
 NIdentifierOpt |= lambda: ""
 NIdentifierOpt |= IDENTIFIER
 
-NEnumStatement |= NEmptyEnumStatement, EmptyEnumStatement
+NEnumStatement |= NEmptyEnumStatement, EmptyEnumStatement.create
 
 NEmptyEnumStatement |= IDENTIFIER
 
 NEnumeratorList |= NEnumerator, lambda e: [e]
 NEnumeratorList |= NEnumeratorList, ',', NEnumerator, lambda el, e: el + [e]
 
-NEnumerator |= IDENTIFIER, NEnumeratorExpressionOpt, Enumerator
+NEnumerator |= IDENTIFIER, NEnumeratorExpressionOpt, Enumerator.create
 
 NEnumeratorExpressionOpt |= '=', NConstantExpression, ConstantExpression
 NEnumeratorExpressionOpt |= lambda: ""
 
 NCommaOpt |= ',', lambda: True
 NCommaOpt |= lambda: False
-
 
 NConstantExpression |= NExpression
 
@@ -431,10 +569,9 @@ NFactor |= '(', NExpression, ')'
 
 NFactor |= INTEGER, IntExpression
 
-NFactor |= IDENTIFIER, IdentifierExpression
+NFactor |= IDENTIFIER, IdentifierExpression.create
 
 NFactor |= KW_SIZEOF, '(', NTypeSpecifier, NAbstractDeclaratorsOpt, ')', SizeofExpression
-
 
 NStructOrUnionSpecifier |= NStructOrUnion, NStructOrUnionStatement, StructOrUnionSpecifier
 
@@ -444,9 +581,9 @@ NStructOrUnion |= KW_UNION, lambda: "union"
 NStructOrUnionStatement |= NFullStructOrUnionStatement
 NStructOrUnionStatement |= NEmptyStructOrUnionStatement
 
-NEmptyStructOrUnionStatement |= IDENTIFIER, EmptyStructOrUnionStatement
+NEmptyStructOrUnionStatement |= IDENTIFIER, EmptyStructOrUnionStatement.create
 
-NFullStructOrUnionStatement |= NIdentifierOpt,  '{', NDeclarationList, '}', FullStructOrUnionStatement
+NFullStructOrUnionStatement |= NIdentifierOpt, '{', NDeclarationList, '}', FullStructOrUnionStatement.create
 
 
 def main():
@@ -456,8 +593,8 @@ def main():
 
     p.add_skipped_domain('\\s')
 
-    # files = ["tests/sem_first.txt"]
-    files = ["tests/mixed.txt"]
+    files = ["tests/sem_first.txt"]
+    # files = ["tests/mixed.txt"]
 
     for filename in files:
         print("file:", filename)
@@ -467,6 +604,7 @@ def main():
                 pprint(tree)
                 print()
                 tree.check()
+                print("Семантических ошибок не найдено")
         except pe.Error as e:
             print(f'Ошибка {e.pos}: {e.message}')
         except Exception as e:
@@ -475,5 +613,6 @@ def main():
 
 main()
 
-
-print("esuIdent:", esuIdent)
+print("esuIdent:", esu_ident)
+print("esuTag:", esu_tag)
+print("const_name:", const_name)
