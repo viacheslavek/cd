@@ -72,6 +72,9 @@ class Expression(abc.ABC):
     def check(self):
         pass
 
+    def calculate(self, ident) -> int:
+        pass
+
 
 @dataclass
 class ConstantExpression:
@@ -98,10 +101,8 @@ class Enumerator:
             raise RepeatedConstant(self.identifier_pos, self.identifier)
         if isinstance(self.constantExpression, ConstantExpression):
             add_to_const(self.identifier, self.constantExpression.expression)
-            print("in Enumerator full содержит", self.constantExpression.expression)
             self.constantExpression.expression.check()
 
-        # TODO: где-то тут у меня будет функция "посчитать константное выражение"
         else:
             add_to_const(self.identifier, enum_pos)
 
@@ -203,14 +204,23 @@ class IdentifierExpression(Expression):
         if not check_const(self.identifier):
             raise UnannouncedConstant(self.identifier_pos, self.identifier)
 
+    def calculate(self, ident) -> int:
+        if self.identifier in calculate_expr:
+            return int(calculate_expr[self.identifier])
+        else:
+            raise ValueError(f'Identifier {self.identifier} not found in calculate_const')
+
 
 @dataclass
 class IntExpression(Expression):
     value: int
 
     def check(self):
-        # Начало вычисления для expression
-        print("IntExpression")
+        pass
+
+    def calculate(self, ident) -> int:
+        calculate_expr[ident] = int(self.value)
+        return int(self.value)
 
 
 @dataclass
@@ -220,9 +230,20 @@ class BinaryOperationExpression(Expression):
     right: Expression
 
     def check(self):
-        print("BinaryOperationExpression")
         self.left.check()
         self.right.check()
+
+    def calculate(self, ident) -> int:
+        if self.operation == '+':
+            return self.left.calculate(ident) + self.right.calculate(ident)
+        elif self.operation == '-':
+            return self.left.calculate(ident) - self.right.calculate(ident)
+        elif self.operation == '*':
+            return self.left.calculate(ident) * self.right.calculate(ident)
+        elif self.operation == '/':
+            return self.left.calculate(ident) // self.right.calculate(ident)
+        else:
+            raise ValueError("Unsupported operation in BinaryOperationExpression", self.operation)
 
 
 @dataclass
@@ -231,8 +252,15 @@ class UnaryOperationExpression(Expression):
     expression: Expression
 
     def check(self):
-        print("UnaryOperationExpression")
         self.expression.check()
+
+    def calculate(self, ident) -> int:
+        if self.operation == '+':
+            return self.expression.calculate(ident)
+        elif self.operation == '-':
+            return -self.expression.calculate(ident)
+        else:
+            raise ValueError("Unsupported operation in UnaryOperationExpression", self.operation)
 
 
 @dataclass
@@ -269,9 +297,6 @@ class AbstractDeclaratorArray(AbstractDeclarator):
 
     def check(self):
         pass
-        # print("abstractDeclaratorArray", self.declarator)
-        # TODO: здесь уже смогу смотреть expression
-        # И здесь проверяю 2 пункт
 
 
 @dataclass
@@ -294,12 +319,19 @@ class SimpleTypeSpecifier(TypeSpecifier):
 
 @dataclass
 class SizeofExpression(Expression):
+    # TODO: либо simplyType, либо enum, либо struct или union, либо название ID
     declarationBody: TypeSpecifier
     varName: AbstractDeclaratorsOpt
 
     def check(self):
-        # TODO: до него надо еще дойти
+        # TODO: Проверяю, что константа внутри есть выше
         print("это sizeof")
+
+    def calculate(self, ident) -> int:
+        # TODO: Вычисляю размер структуры внутри sizeof и кладу в мапу вычисленных размеров
+        # Возвращаю этот размер
+        print("это sizeof")
+        return 0
 
 
 @dataclass
@@ -309,7 +341,6 @@ class Declaration:
 
     def check(self):
         self.varName.check()
-        # print("in declarationBody", self.declarationBody)
         self.declarationBody.check()
         print()
 
@@ -611,8 +642,29 @@ def main():
             print(e)
 
 
+calculate_expr = {}
+
+
+def calculate_constant():
+    for ident, expr in const_name.items():
+        if hasattr(expr, 'calculate') and callable(getattr(expr, 'calculate')):
+            calculate_expr[ident] = expr.calculate(ident)
+        else:
+            calculate_expr[ident] = expr
+
+
+def print_constant():
+    print("CONSTANTS:")
+    for ident, expr in calculate_expr.items():
+        print(f'{ident}: {expr}')
+    print()
+
+
 main()
 
 print("esuIdent:", esu_ident)
 print("esuTag:", esu_tag)
 print("const_name:", const_name)
+
+calculate_constant()
+print_constant()

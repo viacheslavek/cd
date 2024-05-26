@@ -7,6 +7,7 @@ enum Color {
   COLOR_GREEN = 2,
   COLOR_BLUE = 2*2,
   COLOR_HIGHLIGHT = 8,
+  COLOR_MAX = 2*2 + 4 * (3 + 3),
 };
 
 enum ScreenType4 {
@@ -29,6 +30,19 @@ enum {
 enum {
   PAGE_SIZE = 4096,
   PAGES_FOR_BUFFER = (BUFFER_SIZE + PAGE_SIZE - 1) / PAGE_SIZE
+};
+
+enum {
+  PAGE_SIZE2 = -HPIXELS,
+  PAGES_FOR_BUFFER2 = (WPIXELS + HCHARS - 1) / WCHARS
+};
+
+enum {
+  PAGE_SIZE3 = PAGES_FOR_BUFFER2 + 1,
+};
+
+enum {
+  PAGE_SIZE4 = HPIXELS,
 };
 
 enum ScreenType3 screen_type3;

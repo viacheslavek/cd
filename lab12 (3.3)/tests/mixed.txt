@@ -2,11 +2,11 @@ struct Coords {
   int x, y;
 };
 
-enum ScreenType1 { aaa = bab } *screenType[5 + 5], **fas;
+enum ScreenType1 { aaa1 = 1 } *screenType[5 + 5], **fas;
 
-enum ScreenType2 { aaa = bab } *screenType2[5 + 5], **fas2;
+enum ScreenType2 { aaa2 = 2 } *screenType2[5 + 5], **fas2;
 
-enum ScreenType3 { aaa = bab } a1[1], *a2[1], (*a3)[1];
+enum ScreenType3 { aaa3 = 3 } a1[1], *a2[1], (*a3)[1];
 
 enum Color {
   COLOR_RED = 1,
@@ -17,7 +17,8 @@ enum Color {
 
 enum ScreenType4 {
   SCREEN_TYPE_TEXT,
-  SCREEN_TYPE_GRAPHIC
+  SCREEN_TYPE_GRAPHIC,
+  BUFFER_SIZE
 } screen_type;
 
 enum {
