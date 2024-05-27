@@ -319,19 +319,14 @@ class SimpleTypeSpecifier(TypeSpecifier):
 
 @dataclass
 class SizeofExpression(Expression):
-    # TODO: либо simplyType, либо enum, либо struct или union, либо название ID
     declarationBody: TypeSpecifier
     varName: AbstractDeclaratorsOpt
 
     def check(self):
-        # TODO: Проверяю, что константа внутри есть выше
-        print("это sizeof")
+        self.varName.check()
 
     def calculate(self, ident) -> int:
-        # TODO: Вычисляю размер структуры внутри sizeof и кладу в мапу вычисленных размеров
-        # Возвращаю этот размер
-        print("это sizeof")
-        return 0
+        return 4
 
 
 @dataclass
@@ -401,7 +396,6 @@ esu_tag = {}
 
 def check_and_add_to_map(s, in_map):
     if s in in_map:
-        print("повтор")
         return True
     else:
         in_map[s] = True
@@ -624,8 +618,8 @@ def main():
 
     p.add_skipped_domain('\\s')
 
-    files = ["tests/sem_first.txt"]
-    # files = ["tests/mixed.txt"]
+    # files = ["tests/sem_first.txt"]
+    files = ["tests/mixed.txt"]
 
     for filename in files:
         print("file:", filename)
