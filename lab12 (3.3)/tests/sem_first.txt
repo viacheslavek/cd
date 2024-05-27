@@ -46,3 +46,10 @@ enum {
 };
 
 enum ScreenType3 screen_type3;
+
+enum {
+  Token4 = sizeof(int),
+  Token5 = sizeof(int int_value),
+  Token6 = sizeof(long),
+  Token7 = sizeof(struct { int aaa; }),
+};

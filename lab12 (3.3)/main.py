@@ -56,6 +56,9 @@ class TypeSpecifier(abc.ABC):
     def check(self):
         pass
 
+    def calculate(self) -> int:
+        pass
+
 
 class SimpleType(enum.Enum):
     Char = "CHAR"
@@ -112,6 +115,9 @@ class StructOrUnionStatement(abc.ABC):
     def check(self):
         pass
 
+    def calculate(self) -> int:
+        pass
+
 
 @dataclass
 class EmptyStructOrUnionStatement(StructOrUnionStatement):
@@ -128,6 +134,9 @@ class EmptyStructOrUnionStatement(StructOrUnionStatement):
         if check_and_add_to_map(self.identifier, esu_tag):
             raise RepeatedTag(self.identifier_pos, self.identifier)
 
+    def calculate(self) -> int:
+        return 4
+
 
 @dataclass
 class StructOrUnionSpecifier(TypeSpecifier):
@@ -137,10 +146,16 @@ class StructOrUnionSpecifier(TypeSpecifier):
     def check(self):
         self.structOrUnionSpecifier.check()
 
+    def calculate(self) -> int:
+        return self.structOrUnionSpecifier.calculate()
+
 
 @dataclass
 class EnumStatement(abc.ABC):
     def check(self):
+        pass
+
+    def calculate(self) -> int:
         pass
 
 
@@ -150,6 +165,9 @@ class EnumTypeSpecifier(TypeSpecifier):
 
     def check(self):
         self.enumStatement.check()
+
+    def calculate(self) -> int:
+        return self.enumStatement.calculate()
 
 
 @dataclass
@@ -172,6 +190,9 @@ class FullEnumStatement(EnumStatement):
         for idx, enumerator in enumerate(self.enumeratorList):
             enumerator.check(idx)
 
+    def calculate(self) -> int:
+        return 4 * len(self.enumeratorList)
+
 
 @dataclass
 class EmptyEnumStatement(EnumStatement):
@@ -187,6 +208,9 @@ class EmptyEnumStatement(EnumStatement):
     def check(self):
         if check_and_add_to_map(self.identifier, esu_tag):
             raise RepeatedTag(self.identifier_pos, self.identifier)
+
+    def calculate(self) -> int:
+        return 4
 
 
 @dataclass
@@ -313,8 +337,17 @@ class SimpleTypeSpecifier(TypeSpecifier):
     simpleType: SimpleType
 
     def check(self):
-        # вроде не пригодится
         pass
+
+    def calculate(self) -> int:
+        if self.simpleType in [SimpleType.Int, SimpleType.Float]:
+            return 4
+        elif self.simpleType in [SimpleType.Long, SimpleType.Double]:
+            return 8
+        elif self.simpleType == SimpleType.Short:
+            return 2
+        else:
+            return 1
 
 
 @dataclass
@@ -326,7 +359,7 @@ class SizeofExpression(Expression):
         self.varName.check()
 
     def calculate(self, ident) -> int:
-        return 4
+        return self.declarationBody.calculate()
 
 
 @dataclass
@@ -337,7 +370,9 @@ class Declaration:
     def check(self):
         self.varName.check()
         self.declarationBody.check()
-        print()
+
+    def calculate(self) -> int:
+        return self.declarationBody.calculate()
 
 
 @dataclass
@@ -387,6 +422,13 @@ class FullStructOrUnionStatement(StructOrUnionStatement):
 
         for declaration in self.declarationList:
             declaration.check()
+
+    def calculate(self) -> int:
+        summer = 0
+        for d in self.declarationList:
+            summer += d.calculate()
+            print(d)
+        return summer
 
 
 esu_ident = {}
@@ -618,8 +660,8 @@ def main():
 
     p.add_skipped_domain('\\s')
 
-    # files = ["tests/sem_first.txt"]
-    files = ["tests/mixed.txt"]
+    files = ["tests/sem_first.txt"]
+    # files = ["tests/mixed.txt"]
 
     for filename in files:
         print("file:", filename)
@@ -655,10 +697,6 @@ def print_constant():
 
 
 main()
-
-print("esuIdent:", esu_ident)
-print("esuTag:", esu_tag)
-print("const_name:", const_name)
 
 calculate_constant()
 print_constant()
