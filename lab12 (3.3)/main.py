@@ -145,7 +145,7 @@ class EmptyStructOrUnionStatement(StructOrUnionStatement):
             raise UnannouncedTag(self.identifier_pos, self.identifier)
 
     def calculate(self) -> int:
-        return 4
+        return 1
 
 
 @dataclass
@@ -307,6 +307,8 @@ class AbstractDeclarator(abc.ABC):
     def check(self, field_name):
         pass
 
+    # TODO: здесь надо сделать правильный calculate
+
 
 @dataclass
 class AbstractDeclaratorPointer(AbstractDeclarator):
@@ -403,6 +405,7 @@ class Declaration:
         self.declarationBody.check()
 
     def calculate(self) -> int:
+        # TODO: еще надо ввести подсчет из varName: AbstractDeclaratorsOpt
         return self.declarationBody.calculate()
 
 
@@ -461,7 +464,6 @@ class FullStructOrUnionStatement(StructOrUnionStatement):
     def calculate(self) -> int:
         summer = 0
         for d in self.declarationList:
-            # TODO: лучше разбираюсь с типами ниже
             summer += d.calculate()
         return summer
 
