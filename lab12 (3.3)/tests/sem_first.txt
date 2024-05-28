@@ -10,6 +10,8 @@ enum Color {
   COLOR_MAX = 2*2 + 4 * (3 + 3),
 };
 
+enum Color colour2;
+
 enum ScreenType4 {
   SCREEN_TYPE_TEXT,
   SCREEN_TYPE_GRAPHIC,
@@ -45,11 +47,36 @@ enum {
   PAGE_SIZE4 = HPIXELS,
 };
 
-enum ScreenType3 screen_type3;
+struct Token {
+  struct Fragment {
+    struct Pos {
+      int line;
+      int col;
+    } starting, following;
+  } fragment;
+
+  union aaa {
+    char *name;
+    int int_value;
+    double float_value1;
+    double float_value2;
+  } info1;
+
+  union bbb {
+    char *name;
+    int int_value;
+    double float_value1;
+    double float_value2;
+  } info2;
+
+};
+
+struct Token aaa;
 
 enum {
-  Token4 = sizeof(int),
-  Token5 = sizeof(int int_value),
-  Token6 = sizeof(long),
-  Token7 = sizeof(struct { int aaa; }),
+  PAGE_SIZE_1 = sizeof(struct Token),
+  PAGE_SIZE_2 = sizeof(struct Fragment),
+  PAGE_SIZE_3 = sizeof(struct Pos),
+  PAGE_SIZE_4 = sizeof(union aaa),
+  PAGE_SIZE_5 = sizeof(enum Color),
 };

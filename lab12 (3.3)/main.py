@@ -21,14 +21,14 @@ class RepeatedTag(SemanticError):
         return f'Повторный тег {self.ident}'
 
 
-class RepeatedIdentifier(SemanticError):
+class RepeatedField(SemanticError):
     def __init__(self, pos, ident):
         self.pos = pos
         self.ident = ident
 
     @property
     def message(self):
-        return f'Повторный идентификатор {self.ident}'
+        return f'Повторное поле {self.ident}'
 
 
 class RepeatedConstant(SemanticError):
@@ -49,6 +49,16 @@ class UnannouncedConstant(SemanticError):
     @property
     def message(self):
         return f'Необъявленная константа {self.ident}'
+
+
+class UnannouncedTag(SemanticError):
+    def __init__(self, pos, ident):
+        self.pos = pos
+        self.ident = ident
+
+    @property
+    def message(self):
+        return f'Необъявленный тег {self.ident}'
 
 
 @dataclass
@@ -112,7 +122,7 @@ class Enumerator:
 
 @dataclass
 class StructOrUnionStatement(abc.ABC):
-    def check(self):
+    def check(self, type_obj):
         pass
 
     def calculate(self) -> int:
@@ -130,9 +140,9 @@ class EmptyStructOrUnionStatement(StructOrUnionStatement):
         idc, = coords
         return EmptyStructOrUnionStatement(ident, idc.start)
 
-    def check(self):
-        if check_and_add_to_map(self.identifier, esu_tag):
-            raise RepeatedTag(self.identifier_pos, self.identifier)
+    def check(self, _):
+        if self.identifier not in esu_tag:
+            raise UnannouncedTag(self.identifier_pos, self.identifier)
 
     def calculate(self) -> int:
         return 4
@@ -144,7 +154,7 @@ class StructOrUnionSpecifier(TypeSpecifier):
     structOrUnionSpecifier: StructOrUnionStatement
 
     def check(self):
-        self.structOrUnionSpecifier.check()
+        self.structOrUnionSpecifier.check(self.type)
 
     def calculate(self) -> int:
         return self.structOrUnionSpecifier.calculate()
@@ -184,14 +194,14 @@ class FullEnumStatement(EnumStatement):
         return FullEnumStatement(ident, enList, IsComma, idc.start)
 
     def check(self):
-        if len(self.identifier) != 0 and check_and_add_to_map(self.identifier, esu_tag):
+        if len(self.identifier) != 0 and check_and_add_to_map(self.identifier, self):
             raise RepeatedTag(self.identifier_pos, self.identifier)
 
         for idx, enumerator in enumerate(self.enumeratorList):
             enumerator.check(idx)
 
     def calculate(self) -> int:
-        return 4 * len(self.enumeratorList)
+        return 4
 
 
 @dataclass
@@ -206,8 +216,8 @@ class EmptyEnumStatement(EnumStatement):
         return EmptyEnumStatement(ident, idc.start)
 
     def check(self):
-        if check_and_add_to_map(self.identifier, esu_tag):
-            raise RepeatedTag(self.identifier_pos, self.identifier)
+        if self.identifier not in esu_tag:
+            raise UnannouncedTag(self.identifier_pos, self.identifier)
 
     def calculate(self) -> int:
         return 4
@@ -229,8 +239,8 @@ class IdentifierExpression(Expression):
             raise UnannouncedConstant(self.identifier_pos, self.identifier)
 
     def calculate(self, ident) -> int:
-        if self.identifier in calculate_expr:
-            return int(calculate_expr[self.identifier])
+        if self.identifier in calculated_expr:
+            return int(calculated_expr[self.identifier])
         else:
             raise ValueError(f'Identifier {self.identifier} not found in calculate_const')
 
@@ -243,7 +253,7 @@ class IntExpression(Expression):
         pass
 
     def calculate(self, ident) -> int:
-        calculate_expr[ident] = int(self.value)
+        calculated_expr[ident] = int(self.value)
         return int(self.value)
 
 
@@ -294,7 +304,7 @@ class ListArraysOpt:
 
 @dataclass
 class AbstractDeclarator(abc.ABC):
-    def check(self):
+    def check(self, field_name):
         pass
 
 
@@ -302,34 +312,34 @@ class AbstractDeclarator(abc.ABC):
 class AbstractDeclaratorPointer(AbstractDeclarator):
     declarator: AbstractDeclarator
 
-    def check(self):
-        self.declarator.check()
+    def check(self, field_name):
+        self.declarator.check(field_name)
 
 
 @dataclass
 class AbstractDeclaratorArrayList:
     arrays: list[AbstractDeclarator]
 
-    def check(self):
+    def check(self, field_name):
         for ad in self.arrays:
-            ad.check()
+            ad.check(field_name)
 
 
 @dataclass
 class AbstractDeclaratorArray(AbstractDeclarator):
-    declarator: Expression
+    size_of_array: Expression
 
-    def check(self):
-        pass
+    def check(self, _):
+        self.size_of_array.check()
 
 
 @dataclass
 class AbstractDeclaratorsOpt:
     abstractDeclaratorList: list[AbstractDeclarator]
 
-    def check(self):
+    def check(self, field_name):
         for ad in self.abstractDeclaratorList:
-            ad.check()
+            ad.check(field_name)
 
 
 @dataclass
@@ -352,14 +362,35 @@ class SimpleTypeSpecifier(TypeSpecifier):
 
 @dataclass
 class SizeofExpression(Expression):
-    declarationBody: TypeSpecifier
-    varName: AbstractDeclaratorsOpt
+    typeName: str
+    identName: str
+    identifier_pos: pe.Position
+
+    @pe.ExAction
+    def create(self, coords, res_coord):
+        typeName, identName = self
+        _, _, _, idc, _ = coords
+        return SizeofExpression(typeName, identName, idc.start)
 
     def check(self):
-        self.varName.check()
+        if self.identName not in esu_tag:
+            raise UnannouncedTag(self.identifier_pos, self.identName)
 
     def calculate(self, ident) -> int:
-        return self.declarationBody.calculate()
+        decl = esu_tag[self.identName]
+        if isinstance(decl, StructOrUnionSpecifier):
+            full_struct_or_union_specifier_obj = decl
+            if self.typeName != full_struct_or_union_specifier_obj.type:
+                raise ValueError(f"Incorrect type of sizeof expression, expected: {self.typeName},"
+                                 f" got: {full_struct_or_union_specifier_obj.type} in", self)
+            return full_struct_or_union_specifier_obj.calculate()
+        elif isinstance(decl, FullEnumStatement):
+            full_enum_statement_obj = decl
+            if self.typeName != "enum":
+                raise ValueError("Incorrect type of sizeof expression", self.typeName, "enum")
+            return full_enum_statement_obj.calculate()
+        else:
+            raise ValueError("Incorrect type of sizeof expression", self.typeName, "enum")
 
 
 @dataclass
@@ -367,8 +398,8 @@ class Declaration:
     declarationBody: TypeSpecifier
     varName: AbstractDeclaratorsOpt
 
-    def check(self):
-        self.varName.check()
+    def check(self, field_name):
+        self.varName.check(field_name)
         self.declarationBody.check()
 
     def calculate(self) -> int:
@@ -391,17 +422,18 @@ class AbstractDeclaratorPrimSimple(AbstractDeclaratorPrim):
         idc, = coords
         return AbstractDeclaratorPrimSimple(ident, idc.start)
 
-    def check(self):
-        if check_and_add_to_map(self.identifier, esu_ident):
-            raise RepeatedIdentifier(self.identifier_pos, self.identifier)
+    def check(self, field_name):
+        if self.identifier in field_name:
+            raise RepeatedField(self.identifier_pos, self.identifier)
+        field_name.append(self.identifier)
 
 
 @dataclass
 class AbstractDeclaratorPrimDifficult(AbstractDeclaratorPrim):
     identifier: AbstractDeclarator
 
-    def check(self):
-        self.identifier.check()
+    def check(self, field_name):
+        self.identifier.check(field_name)
 
 
 @dataclass
@@ -416,31 +448,32 @@ class FullStructOrUnionStatement(StructOrUnionStatement):
         idc, _, dc, _ = coords
         return FullStructOrUnionStatement(ident, declList, idc.start)
 
-    def check(self):
-        if len(self.identifierOpt) != 0 and check_and_add_to_map(self.identifierOpt, esu_tag):
+    def check(self, type_obj):
+        field_name = list()
+
+        if (len(self.identifierOpt) != 0 and
+                check_and_add_to_map(self.identifierOpt, StructOrUnionSpecifier(type_obj, self))):
             raise RepeatedTag(self.identifier_pos, self.identifierOpt)
 
         for declaration in self.declarationList:
-            declaration.check()
+            declaration.check(field_name)
 
     def calculate(self) -> int:
         summer = 0
         for d in self.declarationList:
+            # TODO: лучше разбираюсь с типами ниже
             summer += d.calculate()
-            print(d)
         return summer
 
-
-esu_ident = {}
 
 esu_tag = {}
 
 
-def check_and_add_to_map(s, in_map):
-    if s in in_map:
+def check_and_add_to_map(s, decl):
+    if s in esu_tag:
         return True
     else:
-        in_map[s] = True
+        esu_tag[s] = decl
         return False
 
 
@@ -461,7 +494,8 @@ class Program:
 
     def check(self):
         for declaration in self.declarationList:
-            declaration.check()
+            field_name = list()
+            declaration.check(field_name)
 
 
 NProgram = pe.NonTerminal('Program')
@@ -524,6 +558,8 @@ NStructOrUnionStatement = pe.NonTerminal('StructOrUnionStatement')
 NFullStructOrUnionStatement = pe.NonTerminal('FullStructOrUnionStatement')
 NEmptyStructOrUnionStatement = pe.NonTerminal('EmptyStructOrUnionStatement')
 
+NTypeSizeofSpecifier = pe.NonTerminal('TypeSizeofSpecifier')
+
 
 def make_keyword(image):
     return pe.Terminal(image, image, lambda _: None, priority=10)
@@ -562,7 +598,7 @@ NAbstractDeclaratorStar |= '*', NAbstractDeclarator, AbstractDeclaratorPointer
 
 NAbstractDeclaratorArrayList |= NAbstractDeclaratorArray, lambda a: [a]
 NAbstractDeclaratorArrayList |= (NAbstractDeclaratorArrayList, NAbstractDeclaratorArray,
-                                 lambda adalo, a: adalo + [a])
+                                 lambda adal, a: adal + [a])
 
 NAbstractDeclaratorArray |= '[', NExpression, ']', AbstractDeclaratorArray
 
@@ -638,12 +674,16 @@ NFactor |= INTEGER, IntExpression
 
 NFactor |= IDENTIFIER, IdentifierExpression.create
 
-NFactor |= KW_SIZEOF, '(', NTypeSpecifier, NAbstractDeclaratorsOpt, ')', SizeofExpression
+NFactor |= KW_SIZEOF, '(', NTypeSizeofSpecifier, IDENTIFIER, ')', SizeofExpression.create
 
 NStructOrUnionSpecifier |= NStructOrUnion, NStructOrUnionStatement, StructOrUnionSpecifier
 
 NStructOrUnion |= KW_STRUCT, lambda: "struct"
 NStructOrUnion |= KW_UNION, lambda: "union"
+
+NTypeSizeofSpecifier |= KW_STRUCT, lambda: "struct"
+NTypeSizeofSpecifier |= KW_UNION, lambda: "union"
+NTypeSizeofSpecifier |= KW_ENUM, lambda: "enum"
 
 NStructOrUnionStatement |= NFullStructOrUnionStatement
 NStructOrUnionStatement |= NEmptyStructOrUnionStatement
@@ -660,8 +700,9 @@ def main():
 
     p.add_skipped_domain('\\s')
 
-    files = ["tests/sem_first.txt"]
+    # files = ["tests/sem_first.txt"]
     # files = ["tests/mixed.txt"]
+    files = ["tests/capacity.txt"]
 
     for filename in files:
         print("file:", filename)
@@ -678,20 +719,38 @@ def main():
             print(e)
 
 
-calculate_expr = {}
+calculated_expr = {}
 
 
 def calculate_constant():
     for ident, expr in const_name.items():
         if hasattr(expr, 'calculate') and callable(getattr(expr, 'calculate')):
-            calculate_expr[ident] = expr.calculate(ident)
+            calculated_expr[ident] = expr.calculate(ident)
         else:
-            calculate_expr[ident] = expr
+            calculated_expr[ident] = expr
+
+
+calculated_capacity = {}
+
+
+def calculate_capacity():
+    for ident, decls in esu_tag.items():
+        if hasattr(decls, 'calculate') and callable(getattr(decls, 'calculate')):
+            calculated_capacity[ident] = decls.calculate()
+        else:
+            raise ValueError("Unsupported sizeof for object", ident, decls)
 
 
 def print_constant():
     print("CONSTANTS:")
-    for ident, expr in calculate_expr.items():
+    for ident, expr in calculated_expr.items():
+        print(f'{ident}: {expr}')
+    print()
+
+
+def print_capacity():
+    print("CAPACITY:")
+    for ident, expr in calculated_capacity.items():
         print(f'{ident}: {expr}')
     print()
 
@@ -700,3 +759,6 @@ main()
 
 calculate_constant()
 print_constant()
+
+calculate_capacity()
+print_capacity()

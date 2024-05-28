@@ -28,23 +28,22 @@ enum {
   WCHARS = 80,
 };
 
-struct ScreenChar1 {
+struct ScreenChar {
   char symbol;
-  enum Color1 sym_color;
-  enum Color2 back_color;
+  enum Color sym_color;
+  enum Color back_color;
 };
 
 struct TextScreen {
-  struct ScreenChar2 chars[HCHARS][WCHARS];
+  struct ScreenChar chars[HCHARS][WCHARS];
 };
 
 struct GrahpicScreen {
-  enum Color3 pixels[HPIXELS][WPIXELS];
+  enum Color pixels[HPIXELS][WPIXELS];
 };
 
 union Screen {
-  struct TextScreen1 text;
-  struct GraphicScreen graphic;
+  struct TextScreen text;
 };
 
 enum {
@@ -52,7 +51,7 @@ enum {
   PAGES_FOR_BUFFER = (BUFFER_SIZE + PAGE_SIZE - 1) / PAGE_SIZE
 };
 
-struct Token2 {
+struct Token {
   struct Fragment {
     struct Pos {
       int line;
@@ -70,7 +69,9 @@ struct Token2 {
   } info;
 };
 
-struct List1 {
-  struct Token3 value;
-  struct List2 *next;
+enum AA { aa = sizeof(struct Token), bb = sizeof(struct Fragment) };
+
+struct List {
+  struct Token value;
+  struct List *next;
 };
