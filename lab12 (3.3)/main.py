@@ -125,7 +125,7 @@ class StructOrUnionStatement(abc.ABC):
     def check(self, type_obj):
         pass
 
-    def calculate(self) -> int:
+    def calculate_struct_or_union(self, type_obj) -> int:
         pass
 
 
@@ -144,8 +144,16 @@ class EmptyStructOrUnionStatement(StructOrUnionStatement):
         if self.identifier not in esu_tag:
             raise UnannouncedTag(self.identifier_pos, self.identifier)
 
-    def calculate(self) -> int:
-        return 1
+    def calculate_struct_or_union(self, _) -> int:
+        o = esu_tag[self.identifier]
+        if isinstance(o, StructOrUnionSpecifier):
+            struct_or_union_specifier_obj = o
+            if self.identifier in calculated_sized:
+                return calculated_sized[self.identifier]
+            else:
+                return 4
+        else:
+            raise ValueError(f'Obj {o} is not StructOrUnionSpecifier')
 
 
 @dataclass
@@ -157,7 +165,7 @@ class StructOrUnionSpecifier(TypeSpecifier):
         self.structOrUnionSpecifier.check(self.type)
 
     def calculate(self) -> int:
-        return self.structOrUnionSpecifier.calculate()
+        return self.structOrUnionSpecifier.calculate_struct_or_union(self.type)
 
 
 @dataclass
@@ -381,6 +389,9 @@ class SimpleTypeSpecifier(TypeSpecifier):
             return 1
 
 
+calculated_sized = {}
+
+
 @dataclass
 class SizeofExpression(Expression):
     typeName: str
@@ -400,16 +411,21 @@ class SizeofExpression(Expression):
     def calculate(self, ident) -> int:
         decl = esu_tag[self.identName]
         if isinstance(decl, StructOrUnionSpecifier):
-            full_struct_or_union_specifier_obj = decl
-            if self.typeName != full_struct_or_union_specifier_obj.type:
+            struct_or_union_specifier_obj = decl
+            if self.typeName != struct_or_union_specifier_obj.type:
                 raise ValueError(f"Incorrect type of sizeof expression, expected: {self.typeName},"
-                                 f" got: {full_struct_or_union_specifier_obj.type} in", self)
-            return full_struct_or_union_specifier_obj.calculate()
+                                 f" got: {struct_or_union_specifier_obj.type} in", self)
+            if ident in calculated_sized:
+                return calculated_sized[ident]
+            else:
+                s_size = struct_or_union_specifier_obj.calculate()
+                calculated_sized[ident] = s_size
+                return s_size
         elif isinstance(decl, FullEnumStatement):
-            full_enum_statement_obj = decl
+            enum_statement_obj = decl
             if self.typeName != "enum":
                 raise ValueError("Incorrect type of sizeof expression", self.typeName, "enum")
-            return full_enum_statement_obj.calculate()
+            return enum_statement_obj.calculate()
         else:
             raise ValueError("Incorrect type of sizeof expression", self.typeName, "enum")
 
@@ -491,10 +507,29 @@ class FullStructOrUnionStatement(StructOrUnionStatement):
         for declaration in self.declarationList:
             declaration.check(field_name)
 
-    def calculate(self) -> int:
+    def calculate_struct_or_union(self, type_obj) -> int:
         summer = 0
-        for d in self.declarationList:
-            summer += d.calculate()
+        if self.identifierOpt != "":
+            if self.identifierOpt in calculated_sized:
+                return calculated_sized[self.identifierOpt]
+            else:
+                if type_obj == "struct":
+                    for d in self.declarationList:
+                        summer += d.calculate()
+                    calculated_sized[self.identifierOpt] = summer
+                    return summer
+                else:
+                    for d in self.declarationList:
+                        summer = max(d.calculate(), summer)
+                    calculated_sized[self.identifierOpt] = summer
+                    return summer
+
+        if type_obj == "struct":
+            for d in self.declarationList:
+                summer += d.calculate()
+        else:
+            for d in self.declarationList:
+                summer = max(d.calculate(), summer)
         return summer
 
 
