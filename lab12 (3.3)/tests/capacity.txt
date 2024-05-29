@@ -1,13 +1,11 @@
 struct ScreenType1 {
-    int a1[1];
-    int *a2[1];
-    int (*a3)[1];
+    int a1[2][3][4];
+    int *a2[5];
 };
 
 struct ScreenType2 {
     int a1[10];
     int *a2[10 + 20];
-    int (*a3)[40];
+    enum {a = 1};
 };
 
-enum AA { st1 = sizeof(struct ScreenType1), st2 = sizeof(struct ScreenType2) };

@@ -307,7 +307,8 @@ class AbstractDeclarator(abc.ABC):
     def check(self, field_name):
         pass
 
-    # TODO: здесь надо сделать правильный calculate
+    def calculate_abstract_and_get_pointer_info(self) -> (int, bool):
+        pass
 
 
 @dataclass
@@ -316,6 +317,10 @@ class AbstractDeclaratorPointer(AbstractDeclarator):
 
     def check(self, field_name):
         self.declarator.check(field_name)
+
+    def calculate_abstract_and_get_pointer_info(self) -> (int, bool):
+        count, _ = self.declarator.calculate_abstract_and_get_pointer_info()
+        return count, True
 
 
 @dataclass
@@ -326,6 +331,13 @@ class AbstractDeclaratorArrayList:
         for ad in self.arrays:
             ad.check(field_name)
 
+    def calculate_abstract_and_get_pointer_info(self) -> (int, bool):
+        multy = 1
+        for a in self.arrays:
+            p, _ = a.calculate_abstract_and_get_pointer_info()
+            multy *= p
+        return multy, False
+
 
 @dataclass
 class AbstractDeclaratorArray(AbstractDeclarator):
@@ -333,6 +345,10 @@ class AbstractDeclaratorArray(AbstractDeclarator):
 
     def check(self, _):
         self.size_of_array.check()
+
+    def calculate_abstract_and_get_pointer_info(self) -> (int, bool):
+        calc = self.size_of_array.calculate("")
+        return calc, False
 
 
 @dataclass
@@ -343,6 +359,13 @@ class AbstractDeclaratorsOpt:
         for ad in self.abstractDeclaratorList:
             ad.check(field_name)
 
+    def calculate_abstract(self) -> int:
+        summer = 0
+        for ad in self.abstractDeclaratorList:
+            calc, _ = ad.calculate_abstract_and_get_pointer_info()
+            summer += calc
+        return summer
+
 
 @dataclass
 class SimpleTypeSpecifier(TypeSpecifier):
@@ -352,12 +375,8 @@ class SimpleTypeSpecifier(TypeSpecifier):
         pass
 
     def calculate(self) -> int:
-        if self.simpleType in [SimpleType.Int, SimpleType.Float]:
+        if self.simpleType in [SimpleType.Int, SimpleType.Float, SimpleType.Long, SimpleType.Double, SimpleType.Short]:
             return 4
-        elif self.simpleType in [SimpleType.Long, SimpleType.Double]:
-            return 8
-        elif self.simpleType == SimpleType.Short:
-            return 2
         else:
             return 1
 
@@ -405,13 +424,16 @@ class Declaration:
         self.declarationBody.check()
 
     def calculate(self) -> int:
-        # TODO: еще надо ввести подсчет из varName: AbstractDeclaratorsOpt
-        return self.declarationBody.calculate()
+        abstract = self.varName.calculate_abstract()
+        return self.declarationBody.calculate() * abstract
 
 
 @dataclass
 class AbstractDeclaratorPrim(abc.ABC):
     pass
+
+    def calculate_ident_and_get_pointer_info(self) -> int:
+        pass
 
 
 @dataclass
@@ -430,6 +452,11 @@ class AbstractDeclaratorPrimSimple(AbstractDeclaratorPrim):
             raise RepeatedField(self.identifier_pos, self.identifier)
         field_name.append(self.identifier)
 
+    def calculate_abstract_and_get_pointer_info(self) -> (int, bool):
+        if self.identifier != "":
+            pass
+        return 1, False
+
 
 @dataclass
 class AbstractDeclaratorPrimDifficult(AbstractDeclaratorPrim):
@@ -437,6 +464,9 @@ class AbstractDeclaratorPrimDifficult(AbstractDeclaratorPrim):
 
     def check(self, field_name):
         self.identifier.check(field_name)
+
+    def calculate_abstract_and_get_pointer_info(self) -> (int, bool):
+        return self.identifier.calculate_abstract_and_get_pointer_info()
 
 
 @dataclass
@@ -703,8 +733,8 @@ def main():
     p.add_skipped_domain('\\s')
 
     # files = ["tests/sem_first.txt"]
-    # files = ["tests/mixed.txt"]
-    files = ["tests/capacity.txt"]
+    files = ["tests/mixed.txt"]
+    # files = ["tests/capacity.txt"]
 
     for filename in files:
         print("file:", filename)
