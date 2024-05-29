@@ -70,3 +70,8 @@ struct Token {
 };
 
 enum AA { aa = sizeof(struct Token), bb = sizeof(struct Fragment) };
+
+struct List {
+  struct Token value;
+  struct List *next;
+};
