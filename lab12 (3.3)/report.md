@@ -1,3 +1,33 @@
+% Лабораторная работа № 3.3 «Семантический анализ»
+% 29 мая 2024 г.
+% Вячеслав Локшин, ИУ9-61Б
+
+# Цель работы
+Целью данной работы является получение навыков выполнения семантического анализа.
+
+# Индивидуальный вариант
+Определения структур, объединений и перечислений языка Си.
+В инициализаторах перечислений допустимы знаки операций +, -, *, /, sizeof,
+операндами могут служить имена перечислимых значений и целые числа.
+Числовые константы могут быть только целочисленными и десятичными.
+
+Проверки:
+
+Используемые идентификаторы должны быть определены выше по тексту.
+Теги структур, теги перечислений и теги объединений не должны повторяться.
+enum’ы определяют глобальные константы, они тоже не должны повторяться.
+В структурах и объединениях не могут встречаться одноимённые поля.
+Результат:
+
+Программа должна выводить на экран значения всех констант.
+Для каждого типа должен вычисляться его объём.
+Считаем, что размеры целых чисел и перечислимых типов — 4 байта,
+вещественных чисел — 8 байт, размер указателя 4 байта.
+Считаем, что выравнивание не используется.
+
+# Реализация
+
+```python
 import abc
 import enum
 from abc import ABC
@@ -776,6 +806,8 @@ def main():
         try:
             with open(filename) as f:
                 tree = p.parse(f.read())
+                pprint(tree)
+                print()
                 tree.check()
                 print("Семантических ошибок не найдено")
         except pe.Error as e:
@@ -827,3 +859,164 @@ print_constant()
 
 calculate_capacity()
 print_capacity()
+
+```
+
+# Тестирование
+
+## Входные данные
+
+```
+struct Coords {
+  int x, y;
+};
+
+enum ScreenType1 { aaa1 = 1 } *screenType[5 + 5], **fas;
+
+enum ScreenType2 { aaa2 = 2 } *screenType2[5 + 5], **fas2;
+
+enum ScreenType3 { aaa3 = 3 } a1[1], *a2[1], (*a3)[1];
+
+enum Color {
+  COLOR_RED = 1,
+  COLOR_GREEN = 2,
+  COLOR_BLUE = 2*2,
+  COLOR_HIGHLIGHT = 8,
+};
+
+enum ScreenType4 {
+  SCREEN_TYPE_TEXT,
+  SCREEN_TYPE_GRAPHIC,
+  BUFFER_SIZE
+} screen_type;
+
+enum {
+  HPIXELS = 480,
+  WPIXELS = 640,
+  HCHARS = 24,
+  WCHARS = 80,
+};
+
+struct ScreenChar {
+  char symbol;
+  enum Color sym_color;
+  enum Color back_color;
+};
+
+struct TextScreen {
+  struct ScreenChar chars[HCHARS][WCHARS];
+};
+
+struct GrahpicScreen {
+  enum Color pixels[HPIXELS][WPIXELS];
+};
+
+union Screen {
+  struct TextScreen text;
+};
+
+enum {
+  PAGE_SIZE = 4096,
+  PAGES_FOR_BUFFER = (BUFFER_SIZE + PAGE_SIZE - 1) / PAGE_SIZE
+};
+
+struct Token {
+  struct Fragment {
+    struct Pos {
+      int line;
+      int col;
+    } starting, following;
+  } fragment;
+
+  enum { Ident, IntConst, FloatConst } type;
+
+  union {
+    char *name;
+    int int_value;
+    double float_value1;
+    double float_value2;
+  } info;
+};
+
+enum AA { aa = sizeof(struct Token), bb = sizeof(struct Fragment) };
+
+struct List {
+  struct Token value;
+  struct List *next;
+};
+
+```
+
+## Вывод на `stdout`
+
+```
+file: tests/mixed.txt
+Семантических ошибок не найдено
+CONSTANTS:
+aaa1: 1
+aaa2: 2
+aaa3: 3
+COLOR_RED: 1
+COLOR_GREEN: 2
+COLOR_BLUE: 4
+COLOR_HIGHLIGHT: 8
+SCREEN_TYPE_TEXT: 0
+SCREEN_TYPE_GRAPHIC: 1
+BUFFER_SIZE: 2
+HPIXELS: 480
+WPIXELS: 640
+HCHARS: 24
+WCHARS: 80
+PAGE_SIZE: 4096
+PAGES_FOR_BUFFER: 1
+Ident: 0
+IntConst: 1
+FloatConst: 2
+aa: 24
+bb: 16
+
+CAPACITY:
+Coords: 8
+ScreenType1: 4
+ScreenType2: 4
+ScreenType3: 4
+Color: 4
+ScreenType4: 4
+ScreenChar: 9
+TextScreen: 17280
+GrahpicScreen: 1228800
+Screen: 17280
+Token: 24
+Fragment: 16
+Pos: 8
+AA: 4
+List: 28
+
+```
+
+# Вывод
+Во время написания этой лабораторной работы я приобрел
+навык написания семантического анализа.
+
+С помощью библиотеки parser_edsl было удобно делать
+семантические проверки в узлах дерева, вычисление токенов
+было на ее стороне. В целом именно проверки узлов
+оказались не сложными, нужно было аккуратно 
+проходится по всему дереву и следить за 4-мя условиями.
+Подсчет математичексих выражений стал первым вызовом,
+но за счет хорошо написанной грамматики сам подсчет 
+не вызвал никаких проблем.
+
+В подсчете размеров структур сначала возникли
+трудности в понимании того, как вообще это можно сделать.
+Изначально я не знал, что в Си размер от enum это 
+размер одной переменной в этом перечислении. 
+И что размер union это максимальный размер из объявлений внутри.
+Однако теперь я знаю больше тонкостей объявлений в Си и это приятно,
+так как раньше я не вдавался в подробности вычисления размера структур
+(только немного читал про выравнивание типов в Go).
+
+Лабораторная работа по итогу для меня стала не такой 
+простой, как казалась, но теперь я лучше разбираюсь 
+как в Си, так и в семантичексом анализе, было интересно, спасибо
+
