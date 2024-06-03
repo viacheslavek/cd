@@ -35,6 +35,7 @@ AbstractDeclaratorPrimSimple -> IDENTIFIER .
 AbstractDeclaratorPrimDifficult -> "(" AbstractDeclarator ")" .
 
 
+
 TypeSpecifier -> SimpleTypeSpecifier .
 TypeSpecifier -> EnumTypeSpecifier .
 TypeSpecifier -> StructOrUnionSpecifier .
@@ -49,6 +50,8 @@ SimpleType -> FLOAT .
 SimpleType -> DOUBLE .
 SimpleType -> SIGNED .
 SimpleType -> UNSIGNED .
+
+
 
 EnumTypeSpecifier -> ENUM EnumStatement .
 
@@ -67,6 +70,8 @@ InnerEnumeratorList -> .
 
 
 Enumerator -> IDENTIFIER EnumeratorExpressionOpt .
+
+
 
 EnumeratorExpressionOpt -> "=" ConstantExpression .
 EnumeratorExpressionOpt -> .
@@ -89,20 +94,96 @@ InnerTerm -> .
 MultyOperation -> "*" .
 MultyOperation -> "/" .
 
-Factor -> sizeof "(" TypeSpecifier AbstractDeclaratorsOpt ")" .
+Factor -> sizeof "(" TypeSizeofSpecifier IDENTIFIER ")" .
 Factor -> IDENTIFIER .
 Factor -> INT .
 Factor -> "(" Expression ")" .
+
+TypeSizeofSpecifier -> STRUCT .
+TypeSizeofSpecifier -> UNION .
+TypeSizeofSpecifier -> ENUM .
+
+
 
 StructOrUnionSpecifier -> StructOrUnion StructOrUnionStatement .
 
 StructOrUnion -> STRUCT .
 StructOrUnion -> UNION .
 
+StructOrUnionStatement -> IDENTIFIER FullStructOrUnionStatementOpt .
 StructOrUnionStatement -> FullStructOrUnionStatement .
-StructOrUnionStatement -> EmptyStructOrUnionStatement .
 
-EmptyStructOrUnionStatement -> IDENTIFIER .
+FullStructOrUnionStatementOpt -> FullStructOrUnionStatement .
+FullStructOrUnionStatementOpt -> .
 
-FullStructOrUnionStatement -> IdentifierOpt "{" DeclarationList "}" .
+FullStructOrUnionStatement -> "{" DeclarationList "}" .
+
+
+## В РБНФ
+
+```
+Program ::= DeclarationList
+DeclarationList ::= Declaration*
+Declaration ::= TypeSpecifier AbstractDeclaratorsOpt ';' 
+
+
+AbstractDeclaratorsOpt ::= AbstractDeclarators?
+
+AbstractDeclarators ::= AbstractDeclarator (',' AbstractDeclarator)* 
+
+AbstractDeclarator ::= AbstractDeclaratorPointer | AbstractDeclaratorArrayList 
+
+AbstractDeclaratorPointer ::= '*' AbstractDeclarator 
+AbstractDeclaratorArrayList ::= AbstractDeclaratorArray+
+
+AbstractDeclaratorArray ::= '[' Expression ']' | AbstractDeclaratorPrim
+
+AbstractDeclaratorPrim ::= AbstractDeclaratorPrimSimple | AbstractDeclaratorPrimDifficult 
+
+AbstractDeclaratorPrimSimple -> IDENTIFIER
+AbstractDeclaratorPrimDifficult -> '(' AbstractDeclarator ')'
+
+
+TypeSpecifier ::= SimpleTypeSpecifier | EnumTypeSpecifier | StructOrUnionSpecifier
+
+SimpleTypeSpecifier ::= SimpleType 
+SimpleType ::= char | short | int | long | float | double 
+
+
+EnumTypeSpecifier ::= ENUM EnumStatement 
+
+EnumStatement ::= IDENTIFIER FullEnumStatementOpt | FullEnumStatement 
+FullEnumStatementOpt ::= FullEnumStatement?
+FullEnumStatement ::= '{' EnumeratorList '}'
+
+EnumeratorList ::= Enumerator (',' Enumerator)*  
+Enumerator ::= IDENTIFIER EnumeratorExpressionOpt 
+
+EnumeratorExpressionOpt ::= ('=' ConstantExpression)? 
+ConstantExpression ::= Expression 
+
+
+Expression ::= ArithmeticExpression 
+
+ArithmeticExpression ::= Term (AddOperation Term)* 
+AddOperation ::= '+' | '-'
+
+Term ::= Factor (MultyOperation Factor)*
+MultyOperation ::= '*' | '/'
+
+Factor ::= sizeof '(' TypeSizeofSpecifier IDENTIFIER ')' | IDENTIFIER | INTEGER | '(' Expression ')'
+
+TypeSizeofSpecifier ::= struct | union | enum
+
+
+StructOrUnionSpecifier ::= StructOrUnion StructOrUnionStatement 
+StructOrUnion ::= struct | union
+
+StructOrUnionStatement ::= IDENTIFIER FullStructOrUnionStatementOpt | FullStructOrUnionStatement
+
+FullStructOrUnionStatementOpt ::= FullStructOrUnionStatement?
+FullStructOrUnionStatement ::= '{' DeclarationList '}' 
+
+```
+
 

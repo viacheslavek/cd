@@ -166,10 +166,3 @@ StructOrUnionStatement -> FullStructOrUnionStatement | EmptyStructOrUnionStateme
 EmptyStructOrUnionStatement -> IDENTIFIER
 
 FullStructOrUnionStatement -> IdentifierOpt { DeclarationList }
-
-
-// struct name - это использование структуры // Если структура не определена struct Token3 value; -> ошибка
-// поля локальные
-// enum это 4, а не длина * 4
-// поддержать размер массива, указатель всегда 4
-

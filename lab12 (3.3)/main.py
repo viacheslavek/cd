@@ -383,7 +383,8 @@ class SimpleTypeSpecifier(TypeSpecifier):
         pass
 
     def calculate(self) -> int:
-        if self.simpleType in [SimpleType.Int, SimpleType.Float, SimpleType.Long, SimpleType.Double, SimpleType.Short]:
+        if self.simpleType in [SimpleType.Int, SimpleType.Float,
+                               SimpleType.Long, SimpleType.Double, SimpleType.Short]:
             return 4
         else:
             return 1
@@ -413,7 +414,8 @@ class SizeofExpression(Expression):
         if isinstance(decl, StructOrUnionSpecifier):
             struct_or_union_specifier_obj = decl
             if self.typeName != struct_or_union_specifier_obj.type:
-                raise ValueError(f"Incorrect type of sizeof expression, expected: {self.typeName},"
+                raise ValueError(f"Incorrect type of sizeof expression,"
+                                 f" expected: {self.typeName},"
                                  f" got: {struct_or_union_specifier_obj.type} in", self)
             if ident in calculated_sized:
                 return calculated_sized[ident]
