@@ -67,32 +67,6 @@ func (t Token) GetValue() string {
 	return t.Value
 }
 
-type Message struct {
-	isComment bool
-	text      string
-}
-
-func NewMessage(isComment bool, text string) Message {
-	return Message{
-		isComment: isComment,
-		text:      text,
-	}
-}
-
-type CommentToken struct {
-	Token
-}
-
-func NewComment(text string, fragment Fragment) CommentToken {
-	return CommentToken{
-		Token: NewToken(CommentTag, text, fragment),
-	}
-}
-
-func (ct CommentToken) String() string {
-	return fmt.Sprintf("%s %s: %s", TagToString[ct.Type], ct.Coordinate, ct.Value)
-}
-
 type EOPToken struct {
 	Token
 }
@@ -103,31 +77,31 @@ func NewEOP() EOPToken {
 	}
 }
 
-type NonTermToken struct {
+type IdentifierToken struct {
 	Token
 }
 
-func NewNonTerminal(value string, fragment Fragment) NonTermToken {
-	return NonTermToken{
-		Token: NewToken(NonTermTag, value, fragment),
+func NewIdentifier(value string, fragment Fragment) IdentifierToken {
+	return IdentifierToken{
+		Token: NewToken(IdentifierTag, value, fragment),
 	}
 }
 
-func (ntt NonTermToken) String() string {
+func (ntt IdentifierToken) String() string {
 	return fmt.Sprintf("%s %s: %s", TagToString[ntt.Type], ntt.Coordinate, ntt.Value)
 }
 
-type TerminalToken struct {
+type IntegerToken struct {
 	Token
 }
 
-func NewTerminal(value string, fragment Fragment) TerminalToken {
-	return TerminalToken{
-		Token: NewToken(TermTag, value, fragment),
+func NewInteger(value string, fragment Fragment) IntegerToken {
+	return IntegerToken{
+		Token: NewToken(IntTag, value, fragment),
 	}
 }
 
-func (tt TerminalToken) String() string {
+func (tt IntegerToken) String() string {
 	return fmt.Sprintf("%s %s: %s", TagToString[tt.Type], tt.Coordinate, tt.Value)
 }
 

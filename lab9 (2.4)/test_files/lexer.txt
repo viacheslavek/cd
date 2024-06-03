@@ -1,0 +1,2 @@
+enum struct aa1 aa2 aa3
+1020 172 909 09 12

@@ -9,19 +9,18 @@ import (
 
 type Scanner struct {
 	tokens   []IToken
-	compiler *Compiler
 	position int
 }
 
 func NewScanner(filepath string) *Scanner {
 	return &Scanner{
 		tokens:   ParseFile(filepath),
-		compiler: NewCompiler(),
 		position: 0,
 	}
 }
 
 func (s *Scanner) PrintTokens() {
+	fmt.Println("TOKENS:")
 	for _, p := range s.tokens {
 		fmt.Println(p)
 	}
@@ -33,21 +32,8 @@ func (s *Scanner) NextToken() IToken {
 	if token.GetType() != EopTag {
 		s.position++
 	}
-	if token.GetType() == TermTag || token.GetType() == NonTermTag ||
-		token.GetType() == CloseBracketTag || token.GetType() == OpenBracketTag || token.GetType() == AxiomTag {
-		return token
-	}
-	if token.GetType() == CommentTag {
-		newToken := token.(CommentToken)
-		s.compiler.AddMessage(newToken)
-		return s.NextToken()
-	}
 
 	return token
-}
-
-func (s *Scanner) GetCompiler() *Compiler {
-	return s.compiler
 }
 
 func ParseFile(filepath string) []IToken {
@@ -64,19 +50,19 @@ func ParseFile(filepath string) []IToken {
 	scanner := bufio.NewScanner(file)
 	runeScanner := NewRunePosition(scanner)
 
+	// TODO: обрабатывать знаки - specSymbol - {'-', '+', '*', '/', '(', ')', '[', ']' , '{', '}', ',', ';'}
+
 	for runeScanner.GetRune() != -1 {
 		for runeScanner.IsWhiteSpace() {
 			runeScanner.NextRune()
 		}
 
-		if runeScanner.IsQuote() {
-			tokens = append(tokens, processTerminal(runeScanner))
+		if runeScanner.IsDigit() {
+			tokens = append(tokens, processInt(runeScanner))
 		} else if runeScanner.IsOpenBracket() || runeScanner.IsCloseBracket() || runeScanner.IsStar() {
 			tokens = append(tokens, processOperand(runeScanner))
 		} else if runeScanner.IsLetter() && runeScanner.IsLatinLetter() {
-			tokens = append(tokens, processNonTerminal(runeScanner))
-		} else if runeScanner.IsOpenSlash() {
-			tokens = append(tokens, processComment(runeScanner))
+			tokens = append(tokens, processIdentifier(runeScanner))
 		} else {
 			if runeScanner.GetRune() == -1 {
 				tokens = append(tokens, NewEOP())
@@ -97,25 +83,18 @@ func ParseFile(filepath string) []IToken {
 	return tokens
 }
 
-func processTerminal(rs *RunePosition) IToken {
-	currentString := make([]rune, 0)
-	currentString = append(currentString, rs.GetRune())
+func processInt(rs *RunePosition) IToken {
+	currentInt := make([]rune, 0)
 	start := rs.GetCurrentPosition()
-	rs.NextRune()
 
-	for !rs.IsQuote() {
-		if rs.GetRune() == -1 {
-			log.Fatalf("the line didn't end %v", NewFragment(start, rs.GetCurrentPosition()))
-		}
-		currentString = append(currentString, rs.GetRune())
+	for rs.IsDigit() {
+		currentInt = append(currentInt, rs.GetRune())
 		rs.NextRune()
 	}
 
-	currentString = append(currentString, rs.GetRune())
 	curPosition := rs.GetCurrentPosition()
-	rs.NextRune()
 
-	return NewTerminal(string(currentString), NewFragment(start, curPosition))
+	return NewInteger(string(currentInt), NewFragment(start, curPosition))
 }
 
 func processOperand(rs *RunePosition) IToken {
@@ -135,12 +114,15 @@ func processOperand(rs *RunePosition) IToken {
 	return nil
 }
 
-func processNonTerminal(rs *RunePosition) IToken {
-	currentNonTerminal := make([]rune, 0)
+// TODO: в ident смотреть на ключевые слова в ProcessIdent
+// keywords = {enum, struct, union, sizeof, char, char, short, int, long, float, double}
+// А так же сохранять идентификаторы в сет
+func processIdentifier(rs *RunePosition) IToken {
+	currentIdentifier := make([]rune, 0)
 
 	start := rs.GetCurrentPosition()
 	curPositionToken := rs.GetCurrentPosition()
-	currentNonTerminal = append(currentNonTerminal, rs.GetRune())
+	currentIdentifier = append(currentIdentifier, rs.GetRune())
 	rs.NextRune()
 
 	for !rs.IsWhiteSpace() && !rs.IsBrackets() {
@@ -148,51 +130,15 @@ func processNonTerminal(rs *RunePosition) IToken {
 			return Token{}
 		}
 		if (rs.IsLetter() && rs.IsLatinLetter()) || rs.IsDigit() {
-			currentNonTerminal = append(currentNonTerminal, rs.GetRune())
+			currentIdentifier = append(currentIdentifier, rs.GetRune())
 		} else if rs.IsOneQuote() {
-			currentNonTerminal = append(currentNonTerminal, rs.GetRune())
+			currentIdentifier = append(currentIdentifier, rs.GetRune())
 		} else {
-			log.Fatalf("error in process nonterminal")
+			log.Fatalf("error in process identifier")
 		}
 		curPositionToken = rs.GetCurrentPosition()
 		rs.NextRune()
 	}
 
-	return NewNonTerminal(string(currentNonTerminal), NewFragment(start, curPositionToken))
-}
-
-func processComment(rs *RunePosition) IToken {
-
-	currentText := make([]rune, 0)
-
-	start := rs.GetCurrentPosition()
-	currentText = append(currentText, rs.GetRune())
-	rs.NextRune()
-
-	if !rs.IsStar() {
-		log.Fatalf("missing quote in comment")
-	}
-	currentText = append(currentText, rs.GetRune())
-	rs.NextRune()
-
-	for !rs.IsStar() {
-		if rs.GetRune() == -1 {
-			log.Fatalf("the line didn't end %v", NewFragment(start, rs.GetCurrentPosition()))
-		}
-		currentText = append(currentText, rs.GetRune())
-		rs.NextRune()
-	}
-
-	currentText = append(currentText, rs.GetRune())
-	rs.NextRune()
-
-	if !rs.IsOpenSlash() {
-		log.Fatalf("missing slash in comment")
-	}
-	currentText = append(currentText, rs.GetRune())
-	rs.NextRune()
-
-	curPositionToken := rs.GetCurrentPosition()
-
-	return NewComment(string(currentText), NewFragment(start, curPositionToken))
+	return NewIdentifier(string(currentIdentifier), NewFragment(start, curPositionToken))
 }
