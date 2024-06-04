@@ -5,17 +5,15 @@ type DomainTag int
 const (
 	IdentifierTag DomainTag = iota + 1
 	IntTag
-	OpenBracketTag
-	CloseBracketTag
-	AxiomTag
+	KeywordTag
+	SpecSymbolTag
 	EopTag
 )
 
 var TagToString = map[DomainTag]string{
-	IdentifierTag:   "Identifier",
-	IntTag:          "Integer",
-	OpenBracketTag:  "OpenBracket",
-	CloseBracketTag: "CloseBracket",
-	AxiomTag:        "AxiomSign",
-	EopTag:          "Eop",
+	IdentifierTag: "Identifier",
+	IntTag:        "Integer",
+	KeywordTag:    "Keyword",
+	SpecSymbolTag: "SpecialSymbol",
+	EopTag:        "Eop",
 }

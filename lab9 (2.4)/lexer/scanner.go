@@ -50,8 +50,6 @@ func ParseFile(filepath string) []IToken {
 	scanner := bufio.NewScanner(file)
 	runeScanner := NewRunePosition(scanner)
 
-	// TODO: обрабатывать знаки - specSymbol - {'-', '+', '*', '/', '(', ')', '[', ']' , '{', '}', ',', ';'}
-
 	for runeScanner.GetRune() != -1 {
 		for runeScanner.IsWhiteSpace() {
 			runeScanner.NextRune()
@@ -59,8 +57,8 @@ func ParseFile(filepath string) []IToken {
 
 		if runeScanner.IsDigit() {
 			tokens = append(tokens, processInt(runeScanner))
-		} else if runeScanner.IsOpenBracket() || runeScanner.IsCloseBracket() || runeScanner.IsStar() {
-			tokens = append(tokens, processOperand(runeScanner))
+		} else if runeScanner.IsSpecialSymbol() {
+			tokens = append(tokens, processSpecialSymbol(runeScanner))
 		} else if runeScanner.IsLetter() && runeScanner.IsLatinLetter() {
 			tokens = append(tokens, processIdentifier(runeScanner))
 		} else {
@@ -68,7 +66,7 @@ func ParseFile(filepath string) []IToken {
 				tokens = append(tokens, NewEOP())
 			} else {
 				fmt.Println("rune:", string(runeScanner.GetRune()))
-				log.Fatalf("incorrect rune in parser")
+				log.Fatalf("incorrect rune in parser %+v", runeScanner.GetCurrentPosition())
 			}
 		}
 
@@ -97,26 +95,15 @@ func processInt(rs *RunePosition) IToken {
 	return NewInteger(string(currentInt), NewFragment(start, curPosition))
 }
 
-func processOperand(rs *RunePosition) IToken {
-	start, curPosition := rs.GetCurrentPosition(), rs.GetCurrentPosition()
+func processSpecialSymbol(rs *RunePosition) IToken {
+	start := rs.GetCurrentPosition()
 	operand := rs.GetRune()
 	rs.NextRune()
+	curPosition := rs.GetCurrentPosition()
 
-	if operand == '(' {
-		return NewOpenBracket(string(operand), NewFragment(start, curPosition))
-	} else if operand == ')' {
-		return NewCloseBracket(string(operand), NewFragment(start, curPosition))
-	} else if operand == '*' {
-		return NewAxiom(string(operand), NewFragment(start, curPosition))
-	}
-
-	log.Fatalf("the non real error %v", NewFragment(start, rs.GetCurrentPosition()))
-	return nil
+	return NewSpecSymbol(string(operand), NewFragment(start, curPosition))
 }
 
-// TODO: в ident смотреть на ключевые слова в ProcessIdent
-// keywords = {enum, struct, union, sizeof, char, char, short, int, long, float, double}
-// А так же сохранять идентификаторы в сет
 func processIdentifier(rs *RunePosition) IToken {
 	currentIdentifier := make([]rune, 0)
 
@@ -125,19 +112,23 @@ func processIdentifier(rs *RunePosition) IToken {
 	currentIdentifier = append(currentIdentifier, rs.GetRune())
 	rs.NextRune()
 
-	for !rs.IsWhiteSpace() && !rs.IsBrackets() {
+	for !rs.IsWhiteSpace() && !rs.IsSpecialSymbol() {
 		if rs.GetRune() == -1 {
 			return Token{}
 		}
 		if (rs.IsLetter() && rs.IsLatinLetter()) || rs.IsDigit() {
 			currentIdentifier = append(currentIdentifier, rs.GetRune())
-		} else if rs.IsOneQuote() {
+		} else if rs.IsUnderlining() {
 			currentIdentifier = append(currentIdentifier, rs.GetRune())
 		} else {
 			log.Fatalf("error in process identifier")
 		}
 		curPositionToken = rs.GetCurrentPosition()
 		rs.NextRune()
+	}
+
+	if IsKeyword(string(currentIdentifier)) {
+		return NewKeyword(string(currentIdentifier), NewFragment(start, curPositionToken))
 	}
 
 	return NewIdentifier(string(currentIdentifier), NewFragment(start, curPositionToken))

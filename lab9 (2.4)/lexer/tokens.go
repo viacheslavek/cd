@@ -105,44 +105,30 @@ func (tt IntegerToken) String() string {
 	return fmt.Sprintf("%s %s: %s", TagToString[tt.Type], tt.Coordinate, tt.Value)
 }
 
-type OpenBracketToken struct {
+type SpecSymbolToken struct {
 	Token
 }
 
-func NewOpenBracket(value string, fragment Fragment) OpenBracketToken {
-	return OpenBracketToken{
-		Token: NewToken(OpenBracketTag, value, fragment),
+func NewSpecSymbol(value string, fragment Fragment) SpecSymbolToken {
+	return SpecSymbolToken{
+		Token: NewToken(SpecSymbolTag, value, fragment),
 	}
 }
 
-func (st OpenBracketToken) String() string {
+func (st SpecSymbolToken) String() string {
 	return fmt.Sprintf("%s %s: %s", TagToString[st.Type], st.Coordinate, st.Value)
 }
 
-type CloseBracketToken struct {
+type KeywordToken struct {
 	Token
 }
 
-func NewCloseBracket(value string, fragment Fragment) CloseBracketToken {
-	return CloseBracketToken{
-		Token: NewToken(CloseBracketTag, value, fragment),
+func NewKeyword(value string, fragment Fragment) KeywordToken {
+	return KeywordToken{
+		Token: NewToken(KeywordTag, value, fragment),
 	}
 }
 
-func (st CloseBracketToken) String() string {
-	return fmt.Sprintf("%s %s: %s", TagToString[st.Type], st.Coordinate, st.Value)
-}
-
-type AxiomToken struct {
-	Token
-}
-
-func NewAxiom(value string, fragment Fragment) AxiomToken {
-	return AxiomToken{
-		Token: NewToken(AxiomTag, value, fragment),
-	}
-}
-
-func (st AxiomToken) String() string {
+func (st KeywordToken) String() string {
 	return fmt.Sprintf("%s %s: %s", TagToString[st.Type], st.Coordinate, st.Value)
 }

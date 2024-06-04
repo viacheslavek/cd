@@ -57,6 +57,10 @@ func (p *RunePosition) IsWhiteSpace() bool {
 	return unicode.IsSpace(p.GetRune())
 }
 
+func (p *RunePosition) IsLineTranslation() bool {
+	return p.GetRune() == '\n'
+}
+
 func (p *RunePosition) IsLetter() bool {
 	return unicode.IsLetter(p.GetRune())
 }
@@ -66,37 +70,81 @@ func (p *RunePosition) IsLatinLetter() bool {
 	return r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z'
 }
 
+func (p *RunePosition) IsUnderlining() bool {
+	return p.GetRune() == '_'
+}
+
 func (p *RunePosition) IsDigit() bool {
 	return unicode.IsDigit(p.GetRune())
 }
 
-func (p *RunePosition) IsQuote() bool {
-	return p.GetRune() == '"'
-}
-func (p *RunePosition) IsOneQuote() bool {
-	return p.GetRune() == '\''
-}
-
-func (p *RunePosition) IsOpenBracket() bool {
+func (p *RunePosition) IsOpenRoundBracket() bool {
 	return p.GetRune() == '('
 }
 
-func (p *RunePosition) IsCloseBracket() bool {
+func (p *RunePosition) IsCloseRoundBracket() bool {
 	return p.GetRune() == ')'
+}
+
+func (p *RunePosition) IsOpenSquareBracket() bool {
+	return p.GetRune() == '['
+}
+
+func (p *RunePosition) IsCloseSquareBracket() bool {
+	return p.GetRune() == ']'
+}
+
+func (p *RunePosition) IsOpenCurlyBracket() bool {
+	return p.GetRune() == '{'
+}
+
+func (p *RunePosition) IsCloseCurlyBracket() bool {
+	return p.GetRune() == '}'
+}
+
+func (p *RunePosition) IsComma() bool {
+	return p.GetRune() == ','
+}
+
+func (p *RunePosition) IsSemicolon() bool {
+	return p.GetRune() == ';'
 }
 
 func (p *RunePosition) IsStar() bool {
 	return p.GetRune() == '*'
 }
 
-func (p *RunePosition) IsBrackets() bool {
-	return p.IsOpenBracket() || p.IsCloseBracket()
+func (p *RunePosition) IsPlus() bool {
+	return p.GetRune() == '+'
 }
 
-func (p *RunePosition) IsOpenSlash() bool {
+func (p *RunePosition) IsMinus() bool {
+	return p.GetRune() == '-'
+}
+
+func (p *RunePosition) IsSlash() bool {
 	return p.GetRune() == '/'
 }
 
-func (p *RunePosition) IsLineTranslation() bool {
-	return p.GetRune() == '\n'
+func (p *RunePosition) IsEqual() bool {
+	return p.GetRune() == '='
+}
+
+func (p *RunePosition) IsSpecialSymbol() bool {
+	return p.IsOpenRoundBracket() || p.IsCloseRoundBracket() ||
+		p.IsOpenSquareBracket() || p.IsCloseSquareBracket() ||
+		p.IsOpenCurlyBracket() || p.IsCloseCurlyBracket() ||
+		p.IsMinus() || p.IsPlus() || p.IsSlash() || p.IsStar() ||
+		p.IsComma() || p.IsSemicolon() || p.IsEqual()
+}
+
+var keywords = map[string]struct{}{
+	"enum": {}, "struct": {}, "union": {},
+	"sizeof": {},
+	"char":   {}, "short": {}, "int": {}, "long": {}, "float": {}, "double": {},
+}
+
+func IsKeyword(ident string) bool {
+	_, ok := keywords[ident]
+	return ok
 }
