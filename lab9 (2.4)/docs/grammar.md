@@ -171,7 +171,6 @@ Factor ::= sizeof '(' (struct | union | enum) IDENTIFIER ')' | IDENTIFIER | INTE
 StructOrUnionSpecifier ::= (struct | union) StructOrUnionStatement 
 
 StructOrUnionStatement ::= IdentStructOrUnionStatement | BodyStructOrUnionStatement
-
 IdentStructOrUnionStatement ::= IDENTIFIER BodyStructOrUnionStatement?
 BodyStructOrUnionStatement ::= '{' DeclarationList '}' 
 

@@ -178,7 +178,6 @@ func (rp *RecursiveParser) enumTypeSpecifier() EnumTypeSpecifier {
 	return NewEnumTypeSpecifier(es)
 }
 
-// TODO: поправить
 // EnumStatement ::= IdentEnumStatement | BodyEnumStatement
 func (rp *RecursiveParser) enumStatement() EnumStatement {
 	if rp.currentToken.GetType() == lexer.IdentifierTag {
@@ -199,25 +198,71 @@ func (rp *RecursiveParser) identEnumStatement() IdentEnumStatement {
 	return NewIdentEnumStatement(ident.GetValue(), bes)
 }
 
-// TODO: делаю -> добавляю разбор EnumeratorList
 // BodyEnumStatement ::= '{' EnumeratorList '}'
 func (rp *RecursiveParser) bodyEnumStatement() BodyEnumStatement {
 	rp.isExpectedToken("{", lexer.SpecSymbolTag)
-	t := rp.currentToken
-	rp.currentToken = rp.scanner.NextToken()
+	el := rp.enumeratorList()
 	rp.isExpectedToken("}", lexer.SpecSymbolTag)
-	return NewBodyEnumStatement(t.GetValue())
+	return NewBodyEnumStatement(el)
 }
 
-// TODO: делаю -> добавляю разбор EnumeratorList
 // EnumeratorList ::= Enumerator (',' Enumerator)*
+func (rp *RecursiveParser) enumeratorList() EnumeratorList {
+	enumeratorList := make([]Enumerator, 0)
+	enumeratorList = append(enumeratorList, rp.enumerator())
 
-// TODO: блок 4 - struct or union
+	for rp.currentToken.GetValue() == "," {
+		rp.currentToken = rp.scanner.NextToken()
+		enumeratorList = append(enumeratorList, rp.enumerator())
+	}
 
-// TODO: поправить
+	return NewEnumeratorList(enumeratorList)
+}
+
+// Enumerator ::= IDENTIFIER ('=' Expression)?
+func (rp *RecursiveParser) enumerator() Enumerator {
+	ident := rp.currentToken
+	rp.currentToken = rp.scanner.NextToken()
+	var expr Expression
+	if rp.currentToken.GetValue() == "=" {
+		rp.currentToken = rp.scanner.NextToken()
+		expr = rp.expression()
+	}
+	return NewEnumerator(ident.GetValue(), expr)
+}
+
 // StructOrUnionSpecifier ::= (struct | union) StructOrUnionStatement
 func (rp *RecursiveParser) structOrUnionSpecifier() StructOrUnionSpecifier {
 	t := rp.currentToken
 	rp.currentToken = rp.scanner.NextToken()
-	return NewStructOrUnionSpecifier(t.GetValue())
+	sus := rp.structOrUnionStatement()
+	return NewStructOrUnionSpecifier(t.GetValue(), sus)
+}
+
+// StructOrUnionStatement ::= IdentStructOrUnionStatement | BodyStructOrUnionStatement
+func (rp *RecursiveParser) structOrUnionStatement() StructOrUnionStatement {
+	if rp.currentToken.GetType() == lexer.IdentifierTag {
+		return rp.identStructOrUnionStatement()
+	} else {
+		return rp.bodyStructOrUnionStatement()
+	}
+}
+
+// IdentStructOrUnionStatement ::= IDENTIFIER BodyStructOrUnionStatement?
+func (rp *RecursiveParser) identStructOrUnionStatement() IdentStructOrUnionStatement {
+	ident := rp.currentToken
+	rp.currentToken = rp.scanner.NextToken()
+	var bsus BodyStructOrUnionStatement
+	if rp.currentToken.GetValue() == "{" {
+		bsus = rp.bodyStructOrUnionStatement()
+	}
+	return NewIdentStructOrUnionStatement(ident.GetValue(), bsus)
+}
+
+// BodyStructOrUnionStatement ::= '{' DeclarationList '}'
+func (rp *RecursiveParser) bodyStructOrUnionStatement() BodyStructOrUnionStatement {
+	rp.isExpectedToken("{", lexer.SpecSymbolTag)
+	dl := rp.declarationList()
+	rp.isExpectedToken("}", lexer.SpecSymbolTag)
+	return NewBodyStructOrUnionStatement(dl)
 }

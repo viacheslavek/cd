@@ -163,15 +163,31 @@ func NewIdentEnumStatement(ident string, bes BodyEnumStatement) IdentEnumStateme
 	return IdentEnumStatement{ident: ident, bodyEnumStatementOpt: bes}
 }
 
-// BodyEnumStatement TODO: дальше раскрываю BodyEnumStatement
 type BodyEnumStatement struct {
-	todo string
+	enumeratorList EnumeratorList
 }
 
 func (bes BodyEnumStatement) enumStatementI() {}
 
-func NewBodyEnumStatement(todo string) BodyEnumStatement {
-	return BodyEnumStatement{todo: todo}
+func NewBodyEnumStatement(el EnumeratorList) BodyEnumStatement {
+	return BodyEnumStatement{enumeratorList: el}
+}
+
+type EnumeratorList struct {
+	enumerators []Enumerator
+}
+
+func NewEnumeratorList(es []Enumerator) EnumeratorList {
+	return EnumeratorList{enumerators: es}
+}
+
+type Enumerator struct {
+	ident         string
+	expressionOpt Expression
+}
+
+func NewEnumerator(ident string, eOpt Expression) Enumerator {
+	return Enumerator{ident: ident, expressionOpt: eOpt}
 }
 
 //
@@ -180,13 +196,39 @@ func NewBodyEnumStatement(todo string) BodyEnumStatement {
 //
 // TODO: делаю блок 4 struct and union
 
-// StructOrUnionSpecifier TODO: дальше раскрываю StructOrUnionSpecifier
 type StructOrUnionSpecifier struct {
-	todo string
+	typeSpecifier          string
+	structOrUnionStatement StructOrUnionStatement
 }
 
 func (sus StructOrUnionSpecifier) typeSpecifierI() {}
 
-func NewStructOrUnionSpecifier(todo string) StructOrUnionSpecifier {
-	return StructOrUnionSpecifier{todo: todo}
+func NewStructOrUnionSpecifier(typeSpecifier string, sus StructOrUnionStatement) StructOrUnionSpecifier {
+	return StructOrUnionSpecifier{typeSpecifier: typeSpecifier, structOrUnionStatement: sus}
+}
+
+type StructOrUnionStatement interface {
+	printNode(offset int)
+	structOrUnionStatementI()
+}
+
+type IdentStructOrUnionStatement struct {
+	ident                         string
+	bodyStructOrUnionStatementOpt BodyStructOrUnionStatement
+}
+
+func (isus IdentStructOrUnionStatement) structOrUnionStatementI() {}
+
+func NewIdentStructOrUnionStatement(ident string, bsus BodyStructOrUnionStatement) IdentStructOrUnionStatement {
+	return IdentStructOrUnionStatement{ident: ident, bodyStructOrUnionStatementOpt: bsus}
+}
+
+type BodyStructOrUnionStatement struct {
+	declarationList DeclarationList
+}
+
+func (bsus BodyStructOrUnionStatement) structOrUnionStatementI() {}
+
+func NewBodyStructOrUnionStatement(dl DeclarationList) BodyStructOrUnionStatement {
+	return BodyStructOrUnionStatement{declarationList: dl}
 }

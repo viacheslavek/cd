@@ -1,10 +1,56 @@
-struct bbb, ccc;
-union ;
-union *a, **b;
-union (*a);
-union a[1][2], (*a)[1];
-enum { aaa } ;
+struct Coords {
+  int x, y;
+};
+
+struct ScreenChar {
+  char symbol;
+  enum Color sym_color;
+  enum Color back_color;
+};
+
+struct TextScreen {
+  struct ScreenChar chars[1][1];
+};
+
+struct GrahpicScreen {
+  enum Color pixels[1][1];
+};
+
+union Screen {
+  struct TextScreen text;
+  struct GraphicScreen graphic;
+};
+
+enum {
+    aaa
+} ;
 enum aaa ;
-enum bbb { bbb } ;
+enum bbb {
+    bbb,
+    aaa,
+    ccc = 10
+} ;
+
+struct Token {
+  struct Fragment {
+    struct Pos {
+      int line;
+      int col;
+    } starting, following;
+  } fragment;
+
+  enum { Ident, IntConst, FloatConst } type;
+
+  union {
+    char *name;
+    int int_value;
+    double float_value;
+  } info;
+};
+
+struct List {
+  struct Token value;
+  struct List *next;
+};
 
 

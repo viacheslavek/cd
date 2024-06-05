@@ -90,14 +90,34 @@ func (ies IdentEnumStatement) printNode(offset int) {
 	ies.bodyEnumStatementOpt.printNode(offset + 1)
 }
 
-// TODO: правлю вывод
 func (bes BodyEnumStatement) printNode(offset int) {
-	fmt.Println(strings.Repeat(offsetString, offset)+"BodyEnumStatement:", bes.todo)
+	fmt.Println(strings.Repeat(offsetString, offset) + "BodyEnumStatement:")
+	bes.enumeratorList.printNode(offset + 1)
 }
 
-// TODO: блок 4 - struct or union
+func (bes EnumeratorList) printNode(offset int) {
+	fmt.Println(strings.Repeat(offsetString, offset) + "EnumeratorList:")
+	for _, e := range bes.enumerators {
+		e.printNode(offset + 1)
+	}
+}
 
-// TODO: правлю вывод StructOrUnionSpecifier
+func (bes Enumerator) printNode(offset int) {
+	fmt.Println(strings.Repeat(offsetString, offset)+"Enumerator:", bes.ident)
+	bes.expressionOpt.printNode(offset + 1)
+}
+
 func (sus StructOrUnionSpecifier) printNode(offset int) {
-	fmt.Println(strings.Repeat(offsetString, offset)+"StructOrUnionSpecifier:", sus.todo)
+	fmt.Println(strings.Repeat(offsetString, offset)+"StructOrUnionSpecifier:", sus.typeSpecifier)
+	sus.structOrUnionStatement.printNode(offset + 1)
+}
+
+func (isus IdentStructOrUnionStatement) printNode(offset int) {
+	fmt.Println(strings.Repeat(offsetString, offset)+"IdentStructOrUnionStatement:", isus.ident)
+	isus.bodyStructOrUnionStatementOpt.printNode(offset + 1)
+}
+
+func (bsus BodyStructOrUnionStatement) printNode(offset int) {
+	fmt.Println(strings.Repeat(offsetString, offset) + "BodyStructOrUnionStatement:")
+	bsus.declarationList.printNode(offset + 1)
 }
