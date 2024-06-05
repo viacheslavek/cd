@@ -136,12 +136,12 @@ AbstractDeclarator ::= AbstractDeclaratorPointer | AbstractDeclaratorArrayList
 AbstractDeclaratorPointer ::= '*' AbstractDeclarator 
 AbstractDeclaratorArrayList ::= AbstractDeclaratorArray+
 
-AbstractDeclaratorArray ::= '[' Expression ']' | AbstractDeclaratorPrim
+AbstractDeclaratorArray ::= AbstractDeclaratorPrimArray |
+ AbstractDeclaratorPrimSimple | AbstractDeclaratorPrimDifficult
 
-AbstractDeclaratorPrim ::= AbstractDeclaratorPrimSimple | AbstractDeclaratorPrimDifficult 
-
-AbstractDeclaratorPrimSimple -> IDENTIFIER
-AbstractDeclaratorPrimDifficult -> '(' AbstractDeclarator ')'
+AbstractDeclaratorPrimArray ::= '[' Expression ']'
+AbstractDeclaratorPrimSimple ::= IDENTIFIER
+AbstractDeclaratorPrimDifficult ::= '(' AbstractDeclarator ')'
 
 
 TypeSpecifier ::= SimpleTypeSpecifier | EnumTypeSpecifier | StructOrUnionSpecifier
