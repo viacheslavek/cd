@@ -1,8 +1,10 @@
-enum aaa ;
 struct bbb, ccc;
 union ;
 union *a, **b;
 union (*a);
 union a[1][2], (*a)[1];
+enum { aaa } ;
+enum aaa ;
+enum bbb { bbb } ;
 
 

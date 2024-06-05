@@ -146,43 +146,34 @@ AbstractDeclaratorPrimDifficult ::= '(' AbstractDeclarator ')'
 
 TypeSpecifier ::= SimpleTypeSpecifier | EnumTypeSpecifier | StructOrUnionSpecifier
 
-SimpleTypeSpecifier ::= SimpleType 
-SimpleType ::= char | short | int | long | float | double 
+SimpleTypeSpecifier ::= char | short | int | long | float | double 
 
 
 EnumTypeSpecifier ::= ENUM EnumStatement 
 
-EnumStatement ::= IDENTIFIER FullEnumStatementOpt | FullEnumStatement 
-FullEnumStatementOpt ::= FullEnumStatement?
-FullEnumStatement ::= '{' EnumeratorList '}'
+EnumStatement ::= IdentEnumStatement | BodyEnumStatement
+IdentEnumStatement ::= IDENTIFIER BodyEnumStatement?
+BodyEnumStatement ::= '{' EnumeratorList '}'
 
 EnumeratorList ::= Enumerator (',' Enumerator)*  
-Enumerator ::= IDENTIFIER EnumeratorExpressionOpt 
-
-EnumeratorExpressionOpt ::= ('=' ConstantExpression)? 
-ConstantExpression ::= Expression 
+Enumerator ::= IDENTIFIER ('=' Expression)? 
 
 
 Expression ::= ArithmeticExpression 
 
-ArithmeticExpression ::= Term (AddOperation Term)* 
-AddOperation ::= '+' | '-'
+ArithmeticExpression ::= Term (('+' | '-') Term)* 
 
-Term ::= Factor (MultyOperation Factor)*
-MultyOperation ::= '*' | '/'
+Term ::= Factor (('*' | '/') Factor)*
 
-Factor ::= sizeof '(' TypeSizeofSpecifier IDENTIFIER ')' | IDENTIFIER | INTEGER | '(' Expression ')'
-
-TypeSizeofSpecifier ::= struct | union | enum
+Factor ::= sizeof '(' (struct | union | enum) IDENTIFIER ')' | IDENTIFIER | INTEGER | '(' Expression ')'
 
 
-StructOrUnionSpecifier ::= StructOrUnion StructOrUnionStatement 
-StructOrUnion ::= struct | union
+StructOrUnionSpecifier ::= (struct | union) StructOrUnionStatement 
 
-StructOrUnionStatement ::= IDENTIFIER FullStructOrUnionStatementOpt | FullStructOrUnionStatement
+StructOrUnionStatement ::= IdentStructOrUnionStatement | BodyStructOrUnionStatement
 
-FullStructOrUnionStatementOpt ::= FullStructOrUnionStatement?
-FullStructOrUnionStatement ::= '{' DeclarationList '}' 
+IdentStructOrUnionStatement ::= IDENTIFIER BodyStructOrUnionStatement?
+BodyStructOrUnionStatement ::= '{' DeclarationList '}' 
 
 ```
 

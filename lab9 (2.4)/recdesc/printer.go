@@ -7,10 +7,6 @@ import (
 
 const offsetString = ".."
 
-type treeNodePrinter interface {
-	printNode(offset int)
-}
-
 func (p Program) Print() {
 	p.printNode(0)
 }
@@ -72,15 +68,36 @@ func (adp AbstractDeclaratorPointer) printNode(offset int) {
 	adp.abstractDeclarator.printNode(offset + 1)
 }
 
+// TODO: блок 5
+//
 // TODO: правлю вывод Expression
 func (e Expression) printNode(offset int) {
 	fmt.Println(strings.Repeat(offsetString, offset)+"Expression:", e.todo)
 
 }
 
-// TODO: блок 3 и 4
-//
-// TODO: правлю вывод TypeSpecifier
-func (ts TypeSpecifier) printNode(offset int) {
-	fmt.Println(strings.Repeat(offsetString, offset)+"TypeSpecifier:", ts.tsInTODO)
+func (sts SimpleTypeSpecifier) printNode(offset int) {
+	fmt.Println(strings.Repeat(offsetString, offset)+"SimpleTypeSpecifier:", sts.specType)
+}
+
+func (ets EnumTypeSpecifier) printNode(offset int) {
+	fmt.Println(strings.Repeat(offsetString, offset) + "EnumTypeSpecifier:")
+	ets.enumStatement.printNode(offset + 1)
+}
+
+func (ies IdentEnumStatement) printNode(offset int) {
+	fmt.Println(strings.Repeat(offsetString, offset)+"IdentEnumStatement:", ies.ident)
+	ies.bodyEnumStatementOpt.printNode(offset + 1)
+}
+
+// TODO: правлю вывод
+func (bes BodyEnumStatement) printNode(offset int) {
+	fmt.Println(strings.Repeat(offsetString, offset)+"BodyEnumStatement:", bes.todo)
+}
+
+// TODO: блок 4 - struct or union
+
+// TODO: правлю вывод StructOrUnionSpecifier
+func (sus StructOrUnionSpecifier) printNode(offset int) {
+	fmt.Println(strings.Repeat(offsetString, offset)+"StructOrUnionSpecifier:", sus.todo)
 }

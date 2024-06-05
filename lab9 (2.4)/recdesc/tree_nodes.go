@@ -101,6 +101,11 @@ func NewAbstractDeclaratorPrimDifficult(ad AbstractDeclarator) AbstractDeclarato
 	return AbstractDeclaratorPrimDifficult{abstractDeclarator: ad}
 }
 
+//
+//
+//
+//
+//
 // TODO: делаю блок 5 - выражения
 
 // Expression TODO: раскрываю expression
@@ -108,21 +113,80 @@ type Expression struct {
 	todo string
 }
 
+//
+//
+//
+//
+
 func NewExpression(todo string) Expression {
 	return Expression{todo: todo}
 }
 
-//
-//
-//
-//
-// TODO: делаю блок 3 и 4
-
-// TypeSpecifier TODO: дальше раскрываю TypeSpecifier -> блок номер 3 и 4
-type TypeSpecifier struct {
-	tsInTODO string
+type TypeSpecifier interface {
+	printNode(offset int)
+	typeSpecifierI()
 }
 
-func NewTypeSpecifier(s string) TypeSpecifier {
-	return TypeSpecifier{tsInTODO: s}
+type SimpleTypeSpecifier struct {
+	specType string
+}
+
+func (sts SimpleTypeSpecifier) typeSpecifierI() {}
+
+func NewSimpleTypeSpecifier(st string) SimpleTypeSpecifier {
+	return SimpleTypeSpecifier{specType: st}
+}
+
+type EnumTypeSpecifier struct {
+	enumStatement EnumStatement
+}
+
+func (ets EnumTypeSpecifier) typeSpecifierI() {}
+
+func NewEnumTypeSpecifier(es EnumStatement) EnumTypeSpecifier {
+	return EnumTypeSpecifier{enumStatement: es}
+}
+
+type EnumStatement interface {
+	printNode(offset int)
+	enumStatementI()
+}
+
+type IdentEnumStatement struct {
+	ident                string
+	bodyEnumStatementOpt BodyEnumStatement
+}
+
+func (ies IdentEnumStatement) enumStatementI() {}
+
+func NewIdentEnumStatement(ident string, bes BodyEnumStatement) IdentEnumStatement {
+	return IdentEnumStatement{ident: ident, bodyEnumStatementOpt: bes}
+}
+
+// BodyEnumStatement TODO: дальше раскрываю BodyEnumStatement
+type BodyEnumStatement struct {
+	todo string
+}
+
+func (bes BodyEnumStatement) enumStatementI() {}
+
+func NewBodyEnumStatement(todo string) BodyEnumStatement {
+	return BodyEnumStatement{todo: todo}
+}
+
+//
+//
+//
+//
+// TODO: делаю блок 4 struct and union
+
+// StructOrUnionSpecifier TODO: дальше раскрываю StructOrUnionSpecifier
+type StructOrUnionSpecifier struct {
+	todo string
+}
+
+func (sus StructOrUnionSpecifier) typeSpecifierI() {}
+
+func NewStructOrUnionSpecifier(todo string) StructOrUnionSpecifier {
+	return StructOrUnionSpecifier{todo: todo}
 }

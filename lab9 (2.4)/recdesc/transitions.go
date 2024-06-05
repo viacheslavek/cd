@@ -1,8 +1,9 @@
 package recdesc
 
 import (
-	"github.com/VyacheslavIsWorkingNow/cd/lab9/lexer"
 	"log"
+
+	"github.com/VyacheslavIsWorkingNow/cd/lab9/lexer"
 )
 
 func (rp *RecursiveParser) Parse() Program {
@@ -147,24 +148,76 @@ func (rp *RecursiveParser) expression() Expression {
 	return NewExpression(t.GetValue())
 }
 
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-// TODO: блок 3 и 4
-
-// TODO: переделываю TypeSpecifier
 // TypeSpecifier ::= SimpleTypeSpecifier | EnumTypeSpecifier | StructOrUnionSpecifier
 func (rp *RecursiveParser) typeSpecifier() TypeSpecifier {
+	if rp.currentToken.GetType() == lexer.KeywordTag && rp.currentToken.GetValue() != "sizeof" {
+		if rp.currentToken.GetValue() == "enum" {
+			return rp.enumTypeSpecifier()
+		} else if rp.currentToken.GetValue() == "struct" || rp.currentToken.GetValue() == "union" {
+			return rp.structOrUnionSpecifier()
+		} else {
+			return rp.simpleTypeSpecifier()
+		}
+	}
+	log.Fatalf("failed parse in typeSpecifier. Expected declarartion keyword, get %s",
+		rp.currentToken)
+	return SimpleTypeSpecifier{}
+}
 
+// SimpleTypeSpecifier ::= char | short | int | long | float | double
+func (rp *RecursiveParser) simpleTypeSpecifier() SimpleTypeSpecifier {
 	t := rp.currentToken
 	rp.currentToken = rp.scanner.NextToken()
-	return NewTypeSpecifier(t.GetValue())
+	return NewSimpleTypeSpecifier(t.GetValue())
+}
+
+// EnumTypeSpecifier ::= ENUM EnumStatement
+func (rp *RecursiveParser) enumTypeSpecifier() EnumTypeSpecifier {
+	rp.isExpectedToken("enum", lexer.KeywordTag)
+	es := rp.enumStatement()
+	return NewEnumTypeSpecifier(es)
+}
+
+// TODO: поправить
+// EnumStatement ::= IdentEnumStatement | BodyEnumStatement
+func (rp *RecursiveParser) enumStatement() EnumStatement {
+	if rp.currentToken.GetType() == lexer.IdentifierTag {
+		return rp.identEnumStatement()
+	} else {
+		return rp.bodyEnumStatement()
+	}
+}
+
+// IdentEnumStatement ::= IDENTIFIER BodyEnumStatement?
+func (rp *RecursiveParser) identEnumStatement() IdentEnumStatement {
+	ident := rp.currentToken
+	rp.currentToken = rp.scanner.NextToken()
+	var bes BodyEnumStatement
+	if rp.currentToken.GetValue() == "{" {
+		bes = rp.bodyEnumStatement()
+	}
+	return NewIdentEnumStatement(ident.GetValue(), bes)
+}
+
+// TODO: делаю -> добавляю разбор EnumeratorList
+// BodyEnumStatement ::= '{' EnumeratorList '}'
+func (rp *RecursiveParser) bodyEnumStatement() BodyEnumStatement {
+	rp.isExpectedToken("{", lexer.SpecSymbolTag)
+	t := rp.currentToken
+	rp.currentToken = rp.scanner.NextToken()
+	rp.isExpectedToken("}", lexer.SpecSymbolTag)
+	return NewBodyEnumStatement(t.GetValue())
+}
+
+// TODO: делаю -> добавляю разбор EnumeratorList
+// EnumeratorList ::= Enumerator (',' Enumerator)*
+
+// TODO: блок 4 - struct or union
+
+// TODO: поправить
+// StructOrUnionSpecifier ::= (struct | union) StructOrUnionStatement
+func (rp *RecursiveParser) structOrUnionSpecifier() StructOrUnionSpecifier {
+	t := rp.currentToken
+	rp.currentToken = rp.scanner.NextToken()
+	return NewStructOrUnionSpecifier(t.GetValue())
 }
