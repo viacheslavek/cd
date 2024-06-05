@@ -1,7 +1,6 @@
 package recdesc
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/VyacheslavIsWorkingNow/cd/lab9/lexer"
@@ -254,8 +253,6 @@ func (rp *RecursiveParser) bodyStructOrUnionStatement() BodyStructOrUnionStateme
 	return NewBodyStructOrUnionStatement(dl)
 }
 
-// TODO: делаю блок 5
-//
 // Expression ::= Term (('+' | '-') Term)*
 func (rp *RecursiveParser) expression() Expression {
 	expr := rp.term()
@@ -284,7 +281,6 @@ func (rp *RecursiveParser) term() Expression {
 	return expr
 }
 
-// TODO: делаю
 // Factor ::= sizeof '(' (struct | union | enum) IDENTIFIER ')' | IDENTIFIER | INTEGER | '(' Expression ')'
 func (rp *RecursiveParser) factor() Expression {
 	if rp.currentToken.GetValue() == "sizeof" {
@@ -311,8 +307,6 @@ func (rp *RecursiveParser) factor() Expression {
 		rp.isExpectedToken(")", lexer.SpecSymbolTag)
 		return NewInsideExpression(expr)
 	}
-
-	fmt.Println("WTF?")
 
 	log.Fatalf("failed to parse expression, get %s", rp.currentToken.GetValue())
 	return SizeOfExpression{}

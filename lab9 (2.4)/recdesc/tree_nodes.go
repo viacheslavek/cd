@@ -206,13 +206,6 @@ func NewBodyStructOrUnionStatement(dl DeclarationList) BodyStructOrUnionStatemen
 	return BodyStructOrUnionStatement{declarationList: dl}
 }
 
-//
-//
-//
-//
-//
-// TODO: делаю блок 5 - выражения
-
 type Expression interface {
 	printNode(offset int)
 	expressionI()
