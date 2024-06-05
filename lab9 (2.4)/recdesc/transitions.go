@@ -1,6 +1,7 @@
 package recdesc
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/VyacheslavIsWorkingNow/cd/lab9/lexer"
@@ -134,20 +135,6 @@ func (rp *RecursiveParser) AbstractDeclaratorPrimDifficult() AbstractDeclaratorP
 	return NewAbstractDeclaratorPrimDifficult(ad)
 }
 
-// TODO: делаю блок 5
-
-// TODO: поправить
-// Expression ::= ArithmeticExpression
-// у меня пока это int
-func (rp *RecursiveParser) expression() Expression {
-	if rp.currentToken.GetType() != lexer.IntTag {
-		log.Fatalf("expression isn`t int. expr is %s", rp.currentToken)
-	}
-	t := rp.currentToken
-	rp.currentToken = rp.scanner.NextToken()
-	return NewExpression(t.GetValue())
-}
-
 // TypeSpecifier ::= SimpleTypeSpecifier | EnumTypeSpecifier | StructOrUnionSpecifier
 func (rp *RecursiveParser) typeSpecifier() TypeSpecifier {
 	if rp.currentToken.GetType() == lexer.KeywordTag && rp.currentToken.GetValue() != "sizeof" {
@@ -223,12 +210,12 @@ func (rp *RecursiveParser) enumeratorList() EnumeratorList {
 func (rp *RecursiveParser) enumerator() Enumerator {
 	ident := rp.currentToken
 	rp.currentToken = rp.scanner.NextToken()
-	var expr Expression
 	if rp.currentToken.GetValue() == "=" {
 		rp.currentToken = rp.scanner.NextToken()
-		expr = rp.expression()
+		expr := rp.expression()
+		return NewEnumerator(ident.GetValue(), expr)
 	}
-	return NewEnumerator(ident.GetValue(), expr)
+	return NewEnumerator(ident.GetValue(), NewNilExpression())
 }
 
 // StructOrUnionSpecifier ::= (struct | union) StructOrUnionStatement
@@ -265,4 +252,68 @@ func (rp *RecursiveParser) bodyStructOrUnionStatement() BodyStructOrUnionStateme
 	dl := rp.declarationList()
 	rp.isExpectedToken("}", lexer.SpecSymbolTag)
 	return NewBodyStructOrUnionStatement(dl)
+}
+
+// TODO: делаю блок 5
+//
+// Expression ::= Term (('+' | '-') Term)*
+func (rp *RecursiveParser) expression() Expression {
+	expr := rp.term()
+	for rp.currentToken.GetValue() == "+" || rp.currentToken.GetValue() == "-" {
+		operation := rp.currentToken.GetValue()
+		rp.currentToken = rp.scanner.NextToken()
+		rightExpr := rp.term()
+
+		expr = NewBinaryOperatorExpression(expr, operation, rightExpr)
+	}
+
+	return expr
+}
+
+// Term -> Factor (('*' | '/') Factor)*
+func (rp *RecursiveParser) term() Expression {
+	expr := rp.factor()
+	for rp.currentToken.GetValue() == "*" || rp.currentToken.GetValue() == "/" {
+		operation := rp.currentToken.GetValue()
+		rp.currentToken = rp.scanner.NextToken()
+		rightExpr := rp.factor()
+
+		expr = NewBinaryOperatorExpression(expr, operation, rightExpr)
+	}
+
+	return expr
+}
+
+// TODO: делаю
+// Factor ::= sizeof '(' (struct | union | enum) IDENTIFIER ')' | IDENTIFIER | INTEGER | '(' Expression ')'
+func (rp *RecursiveParser) factor() Expression {
+	if rp.currentToken.GetValue() == "sizeof" {
+		rp.currentToken = rp.scanner.NextToken()
+		rp.isExpectedToken("(", lexer.SpecSymbolTag)
+		typeDeclaration := rp.currentToken
+		rp.currentToken = rp.scanner.NextToken()
+		ident := rp.currentToken
+		rp.currentToken = rp.scanner.NextToken()
+		rp.isExpectedToken(")", lexer.SpecSymbolTag)
+		return NewSizeOf(typeDeclaration.GetValue(), ident.GetValue())
+	} else if rp.currentToken.GetType() == lexer.IdentifierTag {
+		ident := rp.currentToken
+		rp.currentToken = rp.scanner.NextToken()
+		return NewIdentExpression(ident.GetValue())
+	} else if rp.currentToken.GetType() == lexer.IntTag {
+		integer := rp.currentToken
+		rp.currentToken = rp.scanner.NextToken()
+		return NewIntegerExpression(integer.GetValue())
+		return SizeOfExpression{}
+	} else if rp.currentToken.GetValue() == "(" {
+		rp.isExpectedToken("(", lexer.SpecSymbolTag)
+		expr := rp.expression()
+		rp.isExpectedToken(")", lexer.SpecSymbolTag)
+		return NewInsideExpression(expr)
+	}
+
+	fmt.Println("WTF?")
+
+	log.Fatalf("failed to parse expression, get %s", rp.currentToken.GetValue())
+	return SizeOfExpression{}
 }

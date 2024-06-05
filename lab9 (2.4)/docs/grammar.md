@@ -159,20 +159,18 @@ EnumeratorList ::= Enumerator (',' Enumerator)*
 Enumerator ::= IDENTIFIER ('=' Expression)? 
 
 
-Expression ::= ArithmeticExpression 
-
-ArithmeticExpression ::= Term (('+' | '-') Term)* 
-
-Term ::= Factor (('*' | '/') Factor)*
-
-Factor ::= sizeof '(' (struct | union | enum) IDENTIFIER ')' | IDENTIFIER | INTEGER | '(' Expression ')'
-
-
 StructOrUnionSpecifier ::= (struct | union) StructOrUnionStatement 
 
 StructOrUnionStatement ::= IdentStructOrUnionStatement | BodyStructOrUnionStatement
 IdentStructOrUnionStatement ::= IDENTIFIER BodyStructOrUnionStatement?
 BodyStructOrUnionStatement ::= '{' DeclarationList '}' 
+
+
+Expression ::= Term (('+' | '-') Term)*  
+
+Term ::= Factor (('*' | '/') Factor)*
+
+Factor ::= sizeof '(' (struct | union | enum) IDENTIFIER ')' | IDENTIFIER | INTEGER | '(' Expression ')'
 
 ```
 

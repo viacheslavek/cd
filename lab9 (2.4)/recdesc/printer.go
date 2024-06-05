@@ -68,14 +68,6 @@ func (adp AbstractDeclaratorPointer) printNode(offset int) {
 	adp.abstractDeclarator.printNode(offset + 1)
 }
 
-// TODO: блок 5
-//
-// TODO: правлю вывод Expression
-func (e Expression) printNode(offset int) {
-	fmt.Println(strings.Repeat(offsetString, offset)+"Expression:", e.todo)
-
-}
-
 func (sts SimpleTypeSpecifier) printNode(offset int) {
 	fmt.Println(strings.Repeat(offsetString, offset)+"SimpleTypeSpecifier:", sts.specType)
 }
@@ -120,4 +112,35 @@ func (isus IdentStructOrUnionStatement) printNode(offset int) {
 func (bsus BodyStructOrUnionStatement) printNode(offset int) {
 	fmt.Println(strings.Repeat(offsetString, offset) + "BodyStructOrUnionStatement:")
 	bsus.declarationList.printNode(offset + 1)
+}
+
+func (boe BinaryOperatorExpression) printNode(offset int) {
+	fmt.Println(strings.Repeat(offsetString, offset) + "BinaryOperatorExpression:")
+	boe.left.printNode(offset + 1)
+	fmt.Println(strings.Repeat(offsetString, offset)+"operator:", boe.operation)
+	boe.right.printNode(offset + 1)
+}
+
+func (soe SizeOfExpression) printNode(offset int) {
+	fmt.Println(strings.Repeat(offsetString, offset)+"SizeOfExpression:",
+		soe.typeDeclaration, soe.ident)
+}
+
+func (ie IntegerExpression) printNode(offset int) {
+	fmt.Println(strings.Repeat(offsetString, offset)+"IntegerExpression:",
+		ie.integer)
+}
+
+func (ie IdentExpression) printNode(offset int) {
+	fmt.Println(strings.Repeat(offsetString, offset)+"IdentExpression:",
+		ie.ident)
+}
+
+func (ie InsideExpression) printNode(offset int) {
+	fmt.Println(strings.Repeat(offsetString, offset) + "InsideExpression:")
+	ie.expr.printNode(offset + 1)
+}
+
+func (ne NilExpression) printNode(offset int) {
+	fmt.Println(strings.Repeat(offsetString, offset) + "NilExpression")
 }

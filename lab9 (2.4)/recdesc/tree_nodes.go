@@ -101,27 +101,6 @@ func NewAbstractDeclaratorPrimDifficult(ad AbstractDeclarator) AbstractDeclarato
 	return AbstractDeclaratorPrimDifficult{abstractDeclarator: ad}
 }
 
-//
-//
-//
-//
-//
-// TODO: делаю блок 5 - выражения
-
-// Expression TODO: раскрываю expression
-type Expression struct {
-	todo string
-}
-
-//
-//
-//
-//
-
-func NewExpression(todo string) Expression {
-	return Expression{todo: todo}
-}
-
 type TypeSpecifier interface {
 	printNode(offset int)
 	typeSpecifierI()
@@ -190,12 +169,6 @@ func NewEnumerator(ident string, eOpt Expression) Enumerator {
 	return Enumerator{ident: ident, expressionOpt: eOpt}
 }
 
-//
-//
-//
-//
-// TODO: делаю блок 4 struct and union
-
 type StructOrUnionSpecifier struct {
 	typeSpecifier          string
 	structOrUnionStatement StructOrUnionStatement
@@ -231,4 +204,78 @@ func (bsus BodyStructOrUnionStatement) structOrUnionStatementI() {}
 
 func NewBodyStructOrUnionStatement(dl DeclarationList) BodyStructOrUnionStatement {
 	return BodyStructOrUnionStatement{declarationList: dl}
+}
+
+//
+//
+//
+//
+//
+// TODO: делаю блок 5 - выражения
+
+type Expression interface {
+	printNode(offset int)
+	expressionI()
+}
+
+type BinaryOperatorExpression struct {
+	left      Expression
+	operation string
+	right     Expression
+}
+
+func (boe BinaryOperatorExpression) expressionI() {}
+
+func NewBinaryOperatorExpression(left Expression, operation string, right Expression) BinaryOperatorExpression {
+	return BinaryOperatorExpression{left: left, operation: operation, right: right}
+}
+
+type SizeOfExpression struct {
+	typeDeclaration string
+	ident           string
+}
+
+func (soe SizeOfExpression) expressionI() {}
+
+func NewSizeOf(typeDeclaration, ident string) SizeOfExpression {
+	return SizeOfExpression{typeDeclaration: typeDeclaration, ident: ident}
+}
+
+type IntegerExpression struct {
+	integer string
+}
+
+func (ie IntegerExpression) expressionI() {}
+
+func NewIntegerExpression(integer string) IntegerExpression {
+	return IntegerExpression{integer: integer}
+}
+
+type IdentExpression struct {
+	ident string
+}
+
+func (ie IdentExpression) expressionI() {}
+
+func NewIdentExpression(ident string) IdentExpression {
+	return IdentExpression{ident: ident}
+}
+
+type InsideExpression struct {
+	expr Expression
+}
+
+func (ie InsideExpression) expressionI() {}
+
+func NewInsideExpression(expr Expression) InsideExpression {
+	return InsideExpression{expr: expr}
+}
+
+type NilExpression struct {
+}
+
+func (ne NilExpression) expressionI() {}
+
+func NewNilExpression() NilExpression {
+	return NilExpression{}
 }
