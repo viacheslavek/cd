@@ -7,7 +7,7 @@ import (
 	"github.com/VyacheslavIsWorkingNow/cd/lab9/lexer"
 )
 
-const filepath = "test_files/develop.txt"
+const filepath = "test_files/mixed.txt"
 
 func main() {
 
